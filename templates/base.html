@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Gym System{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <nav class="sidebar">
+    <h2>GymPro</h2>
+    <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+    <a href="#">Members</a>
+    <a href="#">Plans</a>
+    <a href="#">Memberships</a>
+    <a href="#">Attendance</a>
+    <a href="#">Payments</a>
+    <a href="#">Expiration</a>
+    <a href="#">Reports</a>
+  </nav>
+  <main class="content">{% block content %}{% endblock %}</main>
+</body>
+</html>
