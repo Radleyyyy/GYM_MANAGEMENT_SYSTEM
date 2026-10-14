@@ -8,6 +8,7 @@ plans_bp = Blueprint("plans", __name__, url_prefix="/plans")
 
 PLAN_CODE_RE = re.compile(r"^[A-Z0-9]{2,10}$")
 ACCESS_TYPES = ("Full Access", "Off-Peak Access", "Gym Floor Only")
+STATUSES = ("active", "inactive", "archived")
 FIELDS = ("plan_code", "plan_name", "duration_months", "price",
           "description", "benefits", "access_type", "status")
 REQUIRED = {
@@ -57,8 +58,17 @@ def validate(f, plan_id=None):
 
 @plans_bp.route("/")
 def list_plans():
-    plans = plan_model.list_plans()
-    return render_template("plan_list.html", plans=plans)
+    q = request.args.get("q", "").strip()
+    status = request.args.get("status", "all")
+    if status != "all" and status not in STATUSES:
+        status = "all"
+    duration_raw = request.args.get("duration", "")
+    duration = int(duration_raw) if duration_raw.isdigit() else None
+    plans = plan_model.list_plans(q, status, duration)
+    return render_template(
+        "plan_list.html", plans=plans, q=q, status=status,
+        duration=duration, durations=plan_model.get_durations(),
+    )
 
 
 @plans_bp.route("/new", methods=["GET", "POST"])
@@ -81,3 +91,61 @@ def register():
                 flash("A plan with this code already exists.", "error")
     return render_template("plan_form.html", form=form, editing=False,
                            access_types=ACCESS_TYPES)
+
+
+@plans_bp.route("/<int:plan_id>")
+def view(plan_id):
+    plan = plan_model.get_plan(plan_id)
+    if plan is None:
+        flash("Plan not found.", "error")
+        return redirect(url_for("plans.list_plans"))
+    return render_template(
+        "plan_view.html", plan=plan,
+        total_memberships=plan_model.count_memberships(plan_id),
+        active_memberships=plan_model.count_active_memberships(plan_id),
+    )
+
+
+@plans_bp.route("/<int:plan_id>/edit", methods=["GET", "POST"])
+def edit(plan_id):
+    plan = plan_model.get_plan(plan_id)
+    if plan is None:
+        flash("Plan not found.", "error")
+        return redirect(url_for("plans.list_plans"))
+    if plan["status"] == "archived":
+        flash("Restore this plan before editing it.", "error")
+        return redirect(url_for("plans.list_plans", status="archived"))
+    if request.method == "POST":
+        form = read_form()
+        errors = validate(form, plan_id)
+        if errors:
+            for e in errors:
+                flash(e, "error")
+        else:
+            try:
+                plan_model.update_plan(plan_id, form)
+                flash("Plan updated. Existing memberships keep their original fee and dates.", "success")
+                return redirect(url_for("plans.view", plan_id=plan_id))
+            except sqlite3.IntegrityError:
+                flash("A plan with this code already exists.", "error")
+    else:
+        form = {k: ("" if plan[k] is None else str(plan[k])) for k in FIELDS}
+        form["price"] = f"{plan['price']:.2f}"
+    return render_template("plan_form.html", form=form, editing=True,
+                           access_types=ACCESS_TYPES)
+
+
+@plans_bp.route("/<int:plan_id>/status", methods=["POST"])
+def change_status(plan_id):
+    plan = plan_model.get_plan(plan_id)
+    new_status = request.form.get("status")
+    if plan is None:
+        flash("Plan not found.", "error")
+    elif new_status not in STATUSES:
+        flash("Invalid status.", "error")
+    elif new_status == "archived" and plan_model.count_active_memberships(plan_id) > 0:
+        flash("Cannot archive a plan that has active, pending or suspended memberships.", "error")
+    else:
+        plan_model.set_status(plan_id, new_status)
+        flash(f"Plan '{plan['plan_name']}' is now {new_status}.", "success")
+    return redirect(request.referrer or url_for("plans.list_plans"))

@@ -5,13 +5,31 @@
   <h1>Membership Plans</h1>
   <a href="{{ url_for('plans.register') }}" class="btn">+ Add Plan</a>
 </div>
-<p class="muted">{{ plans|length }} plan(s) available</p>
+
+<form method="get" class="toolbar">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search code, name, description, benefits">
+  <select name="duration">
+    <option value="">All durations</option>
+    {% for d in durations %}
+    <option value="{{ d }}" {% if duration == d %}selected{% endif %}>{{ d }} month{{ '' if d == 1 else 's' }}</option>
+    {% endfor %}
+  </select>
+  <select name="status">
+    {% for value, label in [("all", "All (excluding archived)"), ("active", "Active"), ("inactive", "Inactive"), ("archived", "Archived")] %}
+    <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn">Search</button>
+  <a href="{{ url_for('plans.list_plans') }}" class="btn btn-light">Reset</a>
+</form>
+
+<p class="muted">{{ plans|length }} plan(s) found</p>
 
 <table class="data-table">
   <thead>
     <tr>
       <th>Code</th><th>Plan Name</th><th>Duration</th><th>Price</th>
-      <th>Access Type</th><th>Benefits</th><th>Status</th>
+      <th>Access Type</th><th>Status</th><th>Actions</th>
     </tr>
   </thead>
   <tbody>
@@ -22,11 +40,43 @@
       <td>{{ p.duration_months }} month{{ '' if p.duration_months == 1 else 's' }}</td>
       <td>₱{{ '{:,.2f}'.format(p.price) }}</td>
       <td>{{ p.access_type }}</td>
-      <td>{{ p.benefits or '-' }}</td>
       <td><span class="badge badge-{{ p.status }}">{{ p.status }}</span></td>
+      <td>
+        <div class="row-actions">
+          <a href="{{ url_for('plans.view', plan_id=p.plan_id) }}" class="btn btn-sm">View</a>
+          {% if p.status != 'archived' %}
+          <a href="{{ url_for('plans.edit', plan_id=p.plan_id) }}" class="btn btn-sm btn-light">Edit</a>
+          {% endif %}
+
+          {% if p.status == 'active' %}
+          <form method="post" action="{{ url_for('plans.change_status', plan_id=p.plan_id) }}" class="inline">
+            <input type="hidden" name="status" value="inactive">
+            <button type="submit" class="btn btn-sm btn-warn">Deactivate</button>
+          </form>
+          {% elif p.status == 'inactive' %}
+          <form method="post" action="{{ url_for('plans.change_status', plan_id=p.plan_id) }}" class="inline">
+            <input type="hidden" name="status" value="active">
+            <button type="submit" class="btn btn-sm">Activate</button>
+          </form>
+          {% endif %}
+
+          {% if p.status != 'archived' %}
+          <form method="post" action="{{ url_for('plans.change_status', plan_id=p.plan_id) }}" class="inline"
+                onsubmit="return confirm('Archive this plan?');">
+            <input type="hidden" name="status" value="archived">
+            <button type="submit" class="btn btn-sm btn-danger">Archive</button>
+          </form>
+          {% else %}
+          <form method="post" action="{{ url_for('plans.change_status', plan_id=p.plan_id) }}" class="inline">
+            <input type="hidden" name="status" value="inactive">
+            <button type="submit" class="btn btn-sm">Restore</button>
+          </form>
+          {% endif %}
+        </div>
+      </td>
     </tr>
     {% else %}
-    <tr><td colspan="7" class="muted">No plans yet.</td></tr>
+    <tr><td colspan="7" class="muted">No plans found.</td></tr>
     {% endfor %}
   </tbody>
 </table>

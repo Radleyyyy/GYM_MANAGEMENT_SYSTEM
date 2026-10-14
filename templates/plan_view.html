@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Plan Details{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>{{ plan.plan_name }}
+    <span class="badge badge-{{ plan.status }}">{{ plan.status }}</span>
+  </h1>
+  <a href="{{ url_for('plans.list_plans') }}" class="btn btn-light">Back to Plans</a>
+</div>
+
+<div class="form-card">
+  <table class="details">
+    <tr><th>Plan Code</th><td>{{ plan.plan_code }}</td></tr>
+    <tr><th>Plan Name</th><td>{{ plan.plan_name }}</td></tr>
+    <tr><th>Duration</th><td>{{ plan.duration_months }} month{{ '' if plan.duration_months == 1 else 's' }}</td></tr>
+    <tr><th>Price</th><td>₱{{ '{:,.2f}'.format(plan.price) }}</td></tr>
+    <tr><th>Access Type</th><td>{{ plan.access_type }}</td></tr>
+    <tr><th>Description</th><td>{{ plan.description or '-' }}</td></tr>
+    <tr><th>Benefits</th><td>{{ plan.benefits or '-' }}</td></tr>
+    <tr><th>Memberships (all time)</th><td>{{ total_memberships }}</td></tr>
+    <tr><th>Memberships in use</th><td>{{ active_memberships }}</td></tr>
+  </table>
+
+  <div class="actions">
+    {% if plan.status != 'archived' %}
+    <a href="{{ url_for('plans.edit', plan_id=plan.plan_id) }}" class="btn">Edit</a>
+    {% endif %}
+
+    {% if plan.status == 'active' %}
+    <form method="post" action="{{ url_for('plans.change_status', plan_id=plan.plan_id) }}" class="inline">
+      <input type="hidden" name="status" value="inactive">
+      <button type="submit" class="btn btn-warn">Deactivate</button>
+    </form>
+    {% elif plan.status == 'inactive' %}
+    <form method="post" action="{{ url_for('plans.change_status', plan_id=plan.plan_id) }}" class="inline">
+      <input type="hidden" name="status" value="active">
+      <button type="submit" class="btn">Activate</button>
+    </form>
+    {% endif %}
+
+    {% if plan.status != 'archived' %}
+    <form method="post" action="{{ url_for('plans.change_status', plan_id=plan.plan_id) }}" class="inline"
+          onsubmit="return confirm('Archive this plan?');">
+      <input type="hidden" name="status" value="archived">
+      <button type="submit" class="btn btn-danger">Archive</button>
+    </form>
+    {% else %}
+    <form method="post" action="{{ url_for('plans.change_status', plan_id=plan.plan_id) }}" class="inline">
+      <input type="hidden" name="status" value="inactive">
+      <button type="submit" class="btn">Restore</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
