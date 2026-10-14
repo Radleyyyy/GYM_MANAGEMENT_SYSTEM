@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Plan' if editing else 'Add Membership Plan' }}{% endblock %}
+{% block content %}
+<h1>{{ 'Edit Plan' if editing else 'Add Membership Plan' }}</h1>
+<form method="post" class="form-card">
+  <div class="grid">
+    <label>Plan Code *
+      <input type="text" name="plan_code" value="{{ form.plan_code }}" maxlength="10" placeholder="e.g. MON" required>
+    </label>
+    <label>Plan Name *
+      <input type="text" name="plan_name" value="{{ form.plan_name }}" maxlength="50" placeholder="e.g. Monthly" required>
+    </label>
+    <label>Duration (months) *
+      <input type="number" name="duration_months" value="{{ form.duration_months }}" min="1" max="60" step="1" required>
+    </label>
+    <label>Price (₱) *
+      <input type="number" name="price" value="{{ form.price }}" min="0.01" step="0.01" required>
+    </label>
+    <label>Access Type *
+      <select name="access_type" required>
+        {% for a in access_types %}
+        <option value="{{ a }}" {% if form.access_type == a %}selected{% endif %}>{{ a }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Status *
+      <select name="status" required>
+        {% for s in ["active", "inactive"] %}
+        <option value="{{ s }}" {% if form.status == s %}selected{% endif %}>{{ s|capitalize }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="full">Description
+      <textarea name="description" rows="2">{{ form.description }}</textarea>
+    </label>
+    <label class="full">Benefits
+      <textarea name="benefits" rows="3">{{ form.benefits }}</textarea>
+    </label>
+  </div>
+  <div class="actions">
+    <button type="submit" class="btn">{{ 'Save Changes' if editing else 'Save Plan' }}</button>
+    <a href="{{ url_for('plans.list_plans') }}" class="btn btn-light">Cancel</a>
+  </div>
+</form>
+{% endblock %}

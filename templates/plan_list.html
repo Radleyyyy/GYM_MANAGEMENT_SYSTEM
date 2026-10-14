@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Membership Plans{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Membership Plans</h1>
+  <a href="{{ url_for('plans.register') }}" class="btn">+ Add Plan</a>
+</div>
+<p class="muted">{{ plans|length }} plan(s) available</p>
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Code</th><th>Plan Name</th><th>Duration</th><th>Price</th>
+      <th>Access Type</th><th>Benefits</th><th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p in plans %}
+    <tr>
+      <td>{{ p.plan_code }}</td>
+      <td>{{ p.plan_name }}</td>
+      <td>{{ p.duration_months }} month{{ '' if p.duration_months == 1 else 's' }}</td>
+      <td>₱{{ '{:,.2f}'.format(p.price) }}</td>
+      <td>{{ p.access_type }}</td>
+      <td>{{ p.benefits or '-' }}</td>
+      <td><span class="badge badge-{{ p.status }}">{{ p.status }}</span></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" class="muted">No plans yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
