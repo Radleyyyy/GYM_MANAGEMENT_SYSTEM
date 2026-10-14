@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Member Profile{% endblock %}
+{% block content %}
+<h1>{{ member.first_name }} {{ member.last_name }}</h1>
+<div class="form-card">
+  <table class="details">
+    <tr><th>Member Number</th><td>{{ member.member_number }}</td></tr>
+    <tr><th>Gender</th><td>{{ member.gender }}</td></tr>
+    <tr><th>Date of Birth</th><td>{{ member.date_of_birth }}</td></tr>
+    <tr><th>Contact</th><td>{{ member.contact_number }}</td></tr>
+    <tr><th>Email</th><td>{{ member.email }}</td></tr>
+    <tr><th>Address</th><td>{{ member.address or '-' }}</td></tr>
+    <tr><th>Emergency Contact</th><td>{{ member.emergency_contact or '-' }}</td></tr>
+    <tr><th>Registration Date</th><td>{{ member.registration_date }}</td></tr>
+    <tr><th>Status</th><td><span class="badge badge-{{ member.status }}">{{ member.status }}</span></td></tr>
+  </table>
+
+  <div class="actions">
+    <a href="{{ url_for('members.edit', member_id=member.member_id) }}" class="btn">Edit</a>
+
+    {% if member.status == 'active' %}
+    <form method="post" action="{{ url_for('members.change_status', member_id=member.member_id) }}" class="inline">
+      <input type="hidden" name="status" value="inactive">
+      <button type="submit" class="btn btn-warn">Deactivate</button>
+    </form>
+    {% elif member.status == 'inactive' %}
+    <form method="post" action="{{ url_for('members.change_status', member_id=member.member_id) }}" class="inline">
+      <input type="hidden" name="status" value="active">
+      <button type="submit" class="btn">Activate</button>
+    </form>
+    {% endif %}
+
+    {% if member.status != 'archived' %}
+    <form method="post" action="{{ url_for('members.change_status', member_id=member.member_id) }}" class="inline"
+          onsubmit="return confirm('Archive this member?');">
+      <input type="hidden" name="status" value="archived">
+      <button type="submit" class="btn btn-danger">Archive</button>
+    </form>
+    {% else %}
+    <form method="post" action="{{ url_for('members.change_status', member_id=member.member_id) }}" class="inline">
+      <input type="hidden" name="status" value="active">
+      <button type="submit" class="btn">Restore</button>
+    </form>
+    {% endif %}
+
+    <a href="{{ url_for('members.list_members') }}" class="btn btn-light">Back to List</a>
+  </div>
+</div>
+{% endblock %}

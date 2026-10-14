@@ -15,9 +15,16 @@ REQUIRED = {
     "date_of_birth": "Date of birth", "contact_number": "Contact number",
     "email": "Email",
 }
+STATUSES = ("active", "inactive", "archived")
 
 
-def validate(f):
+def read_form():
+    form = {k: request.form.get(k, "").strip() for k in FIELDS}
+    form["email"] = form["email"].lower()
+    return form
+
+
+def validate(f, member_id=None):
     errors = [f"{label} is required." for key, label in REQUIRED.items() if not f[key]]
     if errors:
         return errors
@@ -34,19 +41,28 @@ def validate(f):
     if not EMAIL_RE.match(f["email"]):
         errors.append("Email format is invalid.")
     if not errors:
-        if member_model.email_exists(f["email"]):
+        if member_model.email_exists(f["email"], member_id):
             errors.append("This email is already registered.")
-        if member_model.contact_exists(f["contact_number"]):
+        if member_model.contact_exists(f["contact_number"], member_id):
             errors.append("This contact number is already registered.")
     return errors
+
+
+@members_bp.route("/")
+def list_members():
+    q = request.args.get("q", "").strip()
+    status = request.args.get("status", "all")
+    if status != "all" and status not in STATUSES:
+        status = "all"
+    members = member_model.list_members(q, status)
+    return render_template("member_list.html", members=members, q=q, status=status)
 
 
 @members_bp.route("/register", methods=["GET", "POST"])
 def register():
     form = {k: "" for k in FIELDS}
     if request.method == "POST":
-        form = {k: request.form.get(k, "").strip() for k in FIELDS}
-        form["email"] = form["email"].lower()
+        form = read_form()
         errors = validate(form)
         if errors:
             for e in errors:
@@ -57,7 +73,7 @@ def register():
                 return redirect(url_for("members.success", member_id=member_id))
             except sqlite3.IntegrityError:
                 flash("A member with this email or contact number already exists.", "error")
-    return render_template("member_form.html", form=form)
+    return render_template("member_form.html", form=form, editing=False)
 
 
 @members_bp.route("/success/<int:member_id>")
@@ -65,5 +81,55 @@ def success(member_id):
     member = member_model.get_member(member_id)
     if member is None:
         flash("Member not found.", "error")
-        return redirect(url_for("members.register"))
+        return redirect(url_for("members.list_members"))
     return render_template("member_success.html", member=member)
+
+
+@members_bp.route("/<int:member_id>")
+def view(member_id):
+    member = member_model.get_member(member_id)
+    if member is None:
+        flash("Member not found.", "error")
+        return redirect(url_for("members.list_members"))
+    return render_template("member_view.html", member=member)
+
+
+@members_bp.route("/<int:member_id>/edit", methods=["GET", "POST"])
+def edit(member_id):
+    member = member_model.get_member(member_id)
+    if member is None:
+        flash("Member not found.", "error")
+        return redirect(url_for("members.list_members"))
+    if request.method == "POST":
+        form = read_form()
+        errors = validate(form, member_id)
+        if errors:
+            for e in errors:
+                flash(e, "error")
+        else:
+            try:
+                member_model.update_member(member_id, form)
+                flash("Member updated successfully.", "success")
+                return redirect(url_for("members.view", member_id=member_id))
+            except sqlite3.IntegrityError:
+                flash("A member with this email or contact number already exists.", "error")
+    else:
+        form = {k: (member[k] or "") for k in FIELDS}
+    return render_template("member_form.html", form=form, editing=True,
+                           member_number=member["member_number"])
+
+
+@members_bp.route("/<int:member_id>/status", methods=["POST"])
+def change_status(member_id):
+    member = member_model.get_member(member_id)
+    new_status = request.form.get("status")
+    if member is None:
+        flash("Member not found.", "error")
+    elif new_status not in STATUSES:
+        flash("Invalid status.", "error")
+    elif new_status in ("inactive", "archived") and member_model.has_active_membership(member_id):
+        flash("Cannot deactivate or archive a member who has an active membership.", "error")
+    else:
+        member_model.set_status(member_id, new_status)
+        flash(f"{member['first_name']} {member['last_name']} is now {new_status}.", "success")
+    return redirect(request.referrer or url_for("members.list_members"))
