@@ -108,3 +108,50 @@ def has_active_membership(member_id):
     ).fetchone()
     conn.close()
     return row is not None
+
+def get_current_membership(member_id):
+    conn = get_db()
+    row = conn.execute(
+        """SELECT ms.*, p.plan_name, p.plan_code
+           FROM memberships ms
+           JOIN membership_plans p ON p.plan_id = ms.plan_id
+           WHERE ms.member_id = ?
+           ORDER BY CASE ms.status
+                      WHEN 'active' THEN 0 WHEN 'pending' THEN 1
+                      WHEN 'suspended' THEN 2 ELSE 3 END,
+                    ms.end_date DESC
+           LIMIT 1""",
+        (member_id,),
+    ).fetchone()
+    conn.close()
+    return row
+
+
+def get_payment_history(member_id):
+    conn = get_db()
+    rows = conn.execute(
+        """SELECT pay.payment_number, pay.payment_date, p.plan_name,
+                  pm.method_name, pay.amount_due, pay.amount_paid,
+                  pay.balance, pay.payment_status
+           FROM payments pay
+           JOIN memberships ms ON ms.membership_id = pay.membership_id
+           JOIN membership_plans p ON p.plan_id = ms.plan_id
+           JOIN payment_methods pm ON pm.method_id = pay.method_id
+           WHERE pay.member_id = ?
+           ORDER BY pay.payment_date DESC, pay.payment_id DESC""",
+        (member_id,),
+    ).fetchall()
+    conn.close()
+    return rows
+
+
+def get_attendance_history(member_id, limit=20):
+    conn = get_db()
+    rows = conn.execute(
+        """SELECT check_in_time, check_out_time, duration_minutes
+           FROM attendance WHERE member_id = ?
+           ORDER BY check_in_time DESC LIMIT ?""",
+        (member_id, limit),
+    ).fetchall()
+    conn.close()
+    return rows

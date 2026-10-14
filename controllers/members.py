@@ -91,7 +91,16 @@ def view(member_id):
     if member is None:
         flash("Member not found.", "error")
         return redirect(url_for("members.list_members"))
-    return render_template("member_view.html", member=member)
+    membership = member_model.get_current_membership(member_id)
+    days_left = None
+    if membership:
+        days_left = (date.fromisoformat(membership["end_date"]) - date.today()).days
+    payments = member_model.get_payment_history(member_id)
+    visits = member_model.get_attendance_history(member_id)
+    return render_template(
+        "member_view.html", member=member, membership=membership,
+        days_left=days_left, payments=payments, visits=visits,
+    )
 
 
 @members_bp.route("/<int:member_id>/edit", methods=["GET", "POST"])

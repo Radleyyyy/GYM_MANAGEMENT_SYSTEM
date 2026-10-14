@@ -1,8 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Member Profile{% endblock %}
 {% block content %}
-<h1>{{ member.first_name }} {{ member.last_name }}</h1>
-<div class="form-card">
+<div class="page-head">
+  <h1>{{ member.first_name }} {{ member.last_name }}
+    <span class="badge badge-{{ member.status }}">{{ member.status }}</span>
+  </h1>
+  <a href="{{ url_for('members.list_members') }}" class="btn btn-light">Back to List</a>
+</div>
+
+<div class="form-card profile-card">
+  <h2>Personal Information</h2>
   <table class="details">
     <tr><th>Member Number</th><td>{{ member.member_number }}</td></tr>
     <tr><th>Gender</th><td>{{ member.gender }}</td></tr>
@@ -12,9 +19,7 @@
     <tr><th>Address</th><td>{{ member.address or '-' }}</td></tr>
     <tr><th>Emergency Contact</th><td>{{ member.emergency_contact or '-' }}</td></tr>
     <tr><th>Registration Date</th><td>{{ member.registration_date }}</td></tr>
-    <tr><th>Status</th><td><span class="badge badge-{{ member.status }}">{{ member.status }}</span></td></tr>
   </table>
-
   <div class="actions">
     <a href="{{ url_for('members.edit', member_id=member.member_id) }}" class="btn">Edit</a>
 
@@ -42,8 +47,75 @@
       <button type="submit" class="btn">Restore</button>
     </form>
     {% endif %}
-
-    <a href="{{ url_for('members.list_members') }}" class="btn btn-light">Back to List</a>
   </div>
+</div>
+
+<div class="form-card profile-card">
+  <h2>Current Membership</h2>
+  {% if membership %}
+  <table class="details">
+    <tr><th>Plan</th><td>{{ membership.plan_name }} ({{ membership.plan_code }})</td></tr>
+    <tr><th>Start Date</th><td>{{ membership.start_date }}</td></tr>
+    <tr><th>Expiration Date</th><td>{{ membership.end_date }}
+      {% if days_left is not none %}
+        <span class="muted">
+        {% if days_left > 0 %}({{ days_left }} day(s) left)
+        {% elif days_left == 0 %}(expires today)
+        {% else %}(expired {{ -days_left }} day(s) ago){% endif %}
+        </span>
+      {% endif %}
+    </td></tr>
+    <tr><th>Membership Fee</th><td>₱{{ '{:,.2f}'.format(membership.membership_fee) }}</td></tr>
+    <tr><th>Membership Status</th><td><span class="badge badge-{{ membership.status }}">{{ membership.status }}</span></td></tr>
+  </table>
+  {% else %}
+  <p class="muted">No membership yet.</p>
+  {% endif %}
+</div>
+
+<div class="form-card profile-card">
+  <h2>Payment History</h2>
+  <table class="data-table">
+    <thead>
+      <tr><th>Payment No.</th><th>Date</th><th>Plan</th><th>Method</th><th>Due</th><th>Paid</th><th>Balance</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      {% for p in payments %}
+      <tr>
+        <td>{{ p.payment_number }}</td>
+        <td>{{ p.payment_date }}</td>
+        <td>{{ p.plan_name }}</td>
+        <td>{{ p.method_name }}</td>
+        <td>₱{{ '{:,.2f}'.format(p.amount_due) }}</td>
+        <td>₱{{ '{:,.2f}'.format(p.amount_paid) }}</td>
+        <td>₱{{ '{:,.2f}'.format(p.balance) }}</td>
+        <td><span class="badge badge-{{ p.payment_status }}">{{ p.payment_status }}</span></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8" class="muted">No payment records.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="form-card profile-card">
+  <h2>Attendance History</h2>
+  <table class="data-table">
+    <thead>
+      <tr><th>Date</th><th>Check-In</th><th>Check-Out</th><th>Duration</th></tr>
+    </thead>
+    <tbody>
+      {% for v in visits %}
+      <tr>
+        <td>{{ v.check_in_time[:10] }}</td>
+        <td>{{ v.check_in_time[11:16] }}</td>
+        <td>{% if v.check_out_time %}{{ v.check_out_time[11:16] }}{% else %}<span class="badge badge-active">Inside</span>{% endif %}</td>
+        <td>{% if v.duration_minutes is not none %}{{ (v.duration_minutes / 60)|round(1) }} hrs{% else %}-{% endif %}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4" class="muted">No attendance records.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
 {% endblock %}
