@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Compare Plans{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Compare Membership Plans</h1>
+  <a href="{{ url_for('plans.list_plans') }}" class="btn btn-light">Back to Plans</a>
+</div>
+
+<form method="get" class="form-card">
+  <strong>Choose plans to compare (at least 2):</strong>
+  <div class="pick-list">
+    {% for p in active %}
+    <label>
+      <input type="checkbox" name="ids" value="{{ p.plan_id }}" {% if p.plan_id in selected_ids %}checked{% endif %}>
+      {{ p.plan_name }}
+    </label>
+    {% endfor %}
+  </div>
+  <div class="actions" style="margin-top: 0;">
+    <button type="submit" class="btn">Compare Selected</button>
+    <a href="{{ url_for('plans.compare') }}" class="btn btn-light">Compare All</a>
+  </div>
+</form>
+
+{% if rows %}
+<div class="compare-wrap">
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th></th>
+        {% for r in rows %}
+        <th>{{ r.plan.plan_name }}
+          {% if r.plan.plan_id == best_id %}<br><span class="badge badge-best">Best value</span>{% endif %}
+        </th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>Plan Code</th>
+        {% for r in rows %}<td class="{{ 'best' if r.plan.plan_id == best_id }}">{{ r.plan.plan_code }}</td>{% endfor %}
+      </tr>
+      <tr>
+        <th>Duration</th>
+        {% for r in rows %}<td class="{{ 'best' if r.plan.plan_id == best_id }}">{{ r.plan.duration_months }} month{{ '' if r.plan.duration_months == 1 else 's' }}</td>{% endfor %}
+      </tr>
+      <tr>
+        <th>Price</th>
+        {% for r in rows %}<td class="{{ 'best' if r.plan.plan_id == best_id }}"><span class="price-big">₱{{ '{:,.2f}'.format(r.plan.price) }}</span></td>{% endfor %}
+      </tr>
+      <tr>
+        <th>Price per Month</th>
+        {% for r in rows %}<td class="{{ 'best' if r.plan.plan_id == best_id }}">₱{{ '{:,.2f}'.format(r.per_month) }}</td>{% endfor %}
+      </tr>
+      {% if baseline %}
+      <tr>
+        <th>Savings vs {{ baseline.plan_name }}</th>
+        {% for r in rows %}<td class="{{ 'best' if r.plan.plan_id == best_id }}">{% if r.savings and r.savings > 0 %}{{ r.savings }}%{% else %}-{% endif %}</td>{% endfor %}
+      </tr>
+      {% endif %}
+      <tr>
+        <th>Access Privileges</th>
+        {% for r in rows %}<td class="{{ 'best' if r.plan.plan_id == best_id }}">{{ r.plan.access_type }}</td>{% endfor %}
+      </tr>
+      <tr>
+        <th>Description</th>
+        {% for r in rows %}<td class="{{ 'best' if r.plan.plan_id == best_id }}">{{ r.plan.description or '-' }}</td>{% endfor %}
+      </tr>
+      <tr>
+        <th>Benefits</th>
+        {% for r in rows %}<td class="{{ 'best' if r.plan.plan_id == best_id }}">{{ r.plan.benefits or '-' }}</td>{% endfor %}
+      </tr>
+      <tr>
+        <th>Membership Conditions</th>
+        {% for r in rows %}
+        <td class="{{ 'best' if r.plan.plan_id == best_id }}">
+          <ul>
+            <li>Valid for {{ r.plan.duration_months }} month{{ '' if r.plan.duration_months == 1 else 's' }} from the start date</li>
+            <li>Access: {{ r.plan.access_type }}</li>
+            <li>One active membership per member</li>
+            <li>Renewable on or after expiry</li>
+            <li>Fees are non-refundable</li>
+          </ul>
+        </td>
+        {% endfor %}
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="muted">No active plans to compare.</p>
+{% endif %}
+{% endblock %}

@@ -122,3 +122,11 @@ def count_active_memberships(plan_id):
     ).fetchone()["n"]
     conn.close()
     return n
+
+def list_active_plans():
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT * FROM membership_plans WHERE status = 'active' ORDER BY duration_months, price"
+    ).fetchall()
+    conn.close()
+    return rows

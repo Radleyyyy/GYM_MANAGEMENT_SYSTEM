@@ -149,3 +149,34 @@ def change_status(plan_id):
         plan_model.set_status(plan_id, new_status)
         flash(f"Plan '{plan['plan_name']}' is now {new_status}.", "success")
     return redirect(request.referrer or url_for("plans.list_plans"))
+
+@plans_bp.route("/compare")
+def compare():
+    active = plan_model.list_active_plans()
+    ids = [int(i) for i in request.args.getlist("ids") if i.isdigit()]
+    selected = active
+    if ids:
+        picked = [p for p in active if p["plan_id"] in ids]
+        if len(picked) < 2:
+            flash("Select at least 2 plans to compare.", "error")
+        else:
+            selected = picked
+
+    baseline = next((p for p in active if p["plan_code"] == "MON"), None)
+    if baseline is None:
+        baseline = next((p for p in active if p["duration_months"] == 1), None)
+
+    rows = []
+    for p in selected:
+        per_month = p["price"] / p["duration_months"]
+        savings = None
+        if baseline:
+            savings = round((1 - per_month / (baseline["price"] / baseline["duration_months"])) * 100, 1)
+        rows.append({"plan": p, "per_month": per_month, "savings": savings})
+
+    best_id = min(rows, key=lambda r: r["per_month"])["plan"]["plan_id"] if rows else None
+    return render_template(
+        "plan_compare.html", rows=rows, active=active,
+        selected_ids=[r["plan"]["plan_id"] for r in rows],
+        baseline=baseline, best_id=best_id,
+    )
