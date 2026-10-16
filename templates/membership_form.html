@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Register Membership{% endblock %}
+{% block content %}
+<h1>Register Membership</h1>
+<form method="post" class="form-card">
+  <div class="grid">
+    <label>Member *
+      <select name="member_id" required>
+        <option value="">-- Select member --</option>
+        {% for m in members %}
+        <option value="{{ m.member_id }}" {% if form.member_id == m.member_id|string %}selected{% endif %}>
+          {{ m.member_number }} - {{ m.first_name }} {{ m.last_name }}
+        </option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Plan *
+      <select name="plan_id" id="plan" required>
+        <option value="">-- Select plan --</option>
+        {% for p in plans %}
+        <option value="{{ p.plan_id }}" data-months="{{ p.duration_months }}" data-price="{{ p.price }}"
+                {% if form.plan_id == p.plan_id|string %}selected{% endif %}>
+          {{ p.plan_name }} - {{ p.duration_months }} month(s) - ₱{{ '{:,.2f}'.format(p.price) }}
+        </option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Start Date *
+      <input type="date" name="start_date" id="start" value="{{ form.start_date }}" min="{{ today }}" required>
+    </label>
+    <label>Expiration Date
+      <input type="text" id="end" value="-" readonly>
+    </label>
+    <label>Membership Fee
+      <input type="text" id="fee" value="-" readonly>
+    </label>
+  </div>
+  <div class="actions">
+    <button type="submit" class="btn">Register Membership</button>
+    <a href="{{ url_for('members.list_members') }}" class="btn btn-light">Cancel</a>
+  </div>
+</form>
+
+<script>
+  const plan = document.getElementById("plan");
+  const start = document.getElementById("start");
+
+  function preview() {
+    const opt = plan.options[plan.selectedIndex];
+    const endBox = document.getElementById("end");
+    const feeBox = document.getElementById("fee");
+    if (!opt.dataset.months || !start.value) { endBox.value = "-"; feeBox.value = "-"; return; }
+    const [y, m, d] = start.value.split("-").map(Number);
+    const idx = m - 1 + Number(opt.dataset.months);
+    const ny = y + Math.floor(idx / 12), nm = idx % 12;
+    const last = new Date(ny, nm + 1, 0).getDate();
+    const end = new Date(ny, nm, Math.min(d, last));
+    endBox.value = end.getFullYear() + "-" + String(end.getMonth() + 1).padStart(2, "0")
+                 + "-" + String(end.getDate()).padStart(2, "0");
+    feeBox.value = "₱" + Number(opt.dataset.price).toLocaleString("en-PH", {minimumFractionDigits: 2});
+  }
+  plan.addEventListener("change", preview);
+  start.addEventListener("change", preview);
+  preview();
+</script>
+{% endblock %}

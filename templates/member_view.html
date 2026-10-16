@@ -52,6 +52,9 @@
 
 <div class="form-card profile-card">
   <h2>Current Membership</h2>
+  {% if member.status == 'active' and (not membership or membership.status not in ('active', 'pending')) %}
+<p><a href="{{ url_for('memberships.register', member_id=member.member_id) }}" class="btn">Register Membership</a></p>
+{% endif %}
   {% if membership %}
   <table class="details">
     <tr><th>Plan</th><td>{{ membership.plan_name }} ({{ membership.plan_code }})</td></tr>

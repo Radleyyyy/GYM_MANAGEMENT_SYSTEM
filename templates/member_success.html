@@ -17,7 +17,8 @@
     <tr><th>Status</th><td>{{ member.status }}</td></tr>
   </table>
   <div class="actions">
-    <a href="{{ url_for('members.register') }}" class="btn">Register Another Member</a>
+    <a href="{{ url_for('memberships.register', member_id=member.member_id) }}" class="btn">Register Membership</a>
+<a href="{{ url_for('members.register') }}" class="btn btn-light">Register Another Member</a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-light">Go to Dashboard</a>
   </div>
 </div>
