@@ -36,6 +36,9 @@ def has_open_membership(member_id):
 
 def create_membership(member_id, plan, start, end):
     """Insert the membership and its expiration record in one transaction."""
+        # Last line of defense: never save a wrongly calculated expiration date
+    if end <= start or end != add_months(start, plan["duration_months"]):
+        raise ValueError("Incorrect expiration date for the selected plan.")
     status = "active" if start <= date.today() else "pending"
     conn = get_db()
     try:
