@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Membership Bill{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Membership Bill</h1>
+  <a href="{{ url_for('billing.list_memberships') }}" class="btn btn-light">Back to List</a>
+</div>
+
+<div class="form-card profile-card">
+  <h2>Membership</h2>
+  <table class="details">
+    <tr><th>Member</th><td>{{ m.member_number }} - {{ m.first_name }} {{ m.last_name }}</td></tr>
+    <tr><th>Membership Plan</th><td>{{ m.plan_name }} ({{ m.plan_code }})</td></tr>
+    <tr><th>Period</th><td>{{ m.start_date }} to {{ m.end_date }}
+      <span class="badge badge-{{ m.status }}">{{ m.status }}</span></td></tr>
+    <tr><th>Plan Price</th><td>₱{{ '{:,.2f}'.format(m.membership_fee) }}</td></tr>
+    <tr><th>Paid So Far</th><td>₱{{ '{:,.2f}'.format(m.paid) }}</td></tr>
+  </table>
+</div>
+
+<form method="get" class="form-card profile-card">
+  <h2>Discount and Charges</h2>
+  <input type="hidden" name="calc" value="1">
+  <div class="grid">
+    <label>Discount Type
+      <select name="discount_type" id="dtype">
+        <option value="amount" {% if form.discount_type == 'amount' %}selected{% endif %}>Amount (₱)</option>
+        <option value="percent" {% if form.discount_type == 'percent' %}selected{% endif %}>Percent (%)</option>
+      </select>
+    </label>
+    <label>Discount
+      <input type="text" name="discount" id="disc" value="{{ form.discount }}" placeholder="0" inputmode="decimal">
+    </label>
+    <label>Additional Charges (₱)
+      <input type="text" name="charges" id="chg" value="{{ form.charges }}" placeholder="0" inputmode="decimal">
+    </label>
+    <label>Total Amount (live preview)
+      <input type="text" id="live" value="-" readonly>
+    </label>
+  </div>
+  <div class="actions">
+    <button type="submit" class="btn">Calculate Bill</button>
+  </div>
+</form>
+
+{% if bill %}
+<div class="form-card profile-card">
+  <h2>Billing Statement</h2>
+  <table class="details">
+    <tr><th>Plan Price</th><td>₱{{ '{:,.2f}'.format(bill.price) }}</td></tr>
+    <tr><th>Less: Discount</th><td>- ₱{{ '{:,.2f}'.format(bill.discount) }}</td></tr>
+    <tr><th>Add: Additional Charges</th><td>+ ₱{{ '{:,.2f}'.format(bill.charges) }}</td></tr>
+    <tr><th>Total Amount</th><td><strong>₱{{ '{:,.2f}'.format(bill.total) }}</strong></td></tr>
+  </table>
+  <p class="muted">Total Amount = Plan Price − Discount + Additional Charges</p>
+</div>
+{% endif %}
+
+<script>
+  const price = {{ m.membership_fee }};
+  const dtype = document.getElementById("dtype"), disc = document.getElementById("disc"),
+        chg = document.getElementById("chg"), live = document.getElementById("live");
+  const num = s => { const n = parseFloat(String(s).replace(/,/g, "")); return isNaN(n) || n < 0 ? 0 : n; };
+  function preview() {
+    let d = num(disc.value);
+    if (dtype.value === "percent") d = Math.round(price * Math.min(d, 100)) / 100;
+    d = Math.min(d, price);
+    const total = price - d + num(chg.value);
+    live.value = "₱" + total.toLocaleString("en-PH", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
+  [dtype, disc, chg].forEach(el => el.addEventListener("input", preview));
+  preview();
+</script>
+{% endblock %}

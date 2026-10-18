@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Membership Billing{% endblock %}
+{% block content %}
+<h1>Membership Billing</h1>
+<form method="get" class="toolbar">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search member name, member number, plan">
+  <button type="submit" class="btn">Search</button>
+  <a href="{{ url_for('billing.list_memberships') }}" class="btn btn-light">Reset</a>
+</form>
+<p class="muted">{{ memberships|length }} membership(s) found</p>
+<table class="data-table">
+  <thead>
+    <tr><th>Member</th><th>Plan</th><th>Period</th><th>Status</th><th>Plan Price</th><th>Paid So Far</th><th>Action</th></tr>
+  </thead>
+  <tbody>
+    {% for ms in memberships %}
+    <tr>
+      <td>{{ ms.first_name }} {{ ms.last_name }}<div class="muted">{{ ms.member_number }}</div></td>
+      <td>{{ ms.plan_name }}</td>
+      <td>{{ ms.start_date }} to {{ ms.end_date }}</td>
+      <td><span class="badge badge-{{ ms.status }}">{{ ms.status }}</span></td>
+      <td>₱{{ '{:,.2f}'.format(ms.membership_fee) }}</td>
+      <td>₱{{ '{:,.2f}'.format(ms.paid) }}</td>
+      <td><a href="{{ url_for('billing.bill', membership_id=ms.membership_id) }}" class="btn btn-sm">Bill</a></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" class="muted">No memberships found.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
