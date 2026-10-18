@@ -77,3 +77,59 @@ def get_visit(attendance_id):
     ).fetchone()
     conn.close()
     return row
+
+
+# ===== Lab 14: attendance validation =====
+def get_latest_membership(member_id):
+    """The member's most recent membership (any status), or None."""
+    conn = get_db()
+    row = conn.execute(
+        """SELECT * FROM memberships WHERE member_id = ?
+           ORDER BY end_date DESC, membership_id DESC LIMIT 1""",
+        (member_id,),
+    ).fetchone()
+    conn.close()
+    return row
+
+
+def validate_checkin(member_id):
+    """Check every access rule. Returns a dict:
+    {"ok": bool, "reason": "Access Denied – ..." or "", "member": row, "membership": row}"""
+    result = {"ok": False, "reason": "", "member": None, "membership": None}
+
+    # 1. Member exists
+    member = get_member(member_id)
+    result["member"] = member
+    if member is None:
+        result["reason"] = "Access Denied – Member Not Found"
+        return result
+
+    # 2. Member is active
+    if member["status"] != "active":
+        result["reason"] = f"Access Denied – Member {member['status'].capitalize()}"
+        return result
+
+    # 3. Membership is active and has not expired
+    membership = get_active_membership(member_id)
+    result["membership"] = membership
+    if membership is None:
+        latest = get_latest_membership(member_id)
+        if latest is None:
+            result["reason"] = "Access Denied – No Membership"
+        elif latest["status"] == "pending":
+            result["reason"] = "Access Denied – Membership Not Yet Active"
+        elif latest["status"] == "suspended":
+            result["reason"] = "Access Denied – Membership Suspended"
+        elif latest["status"] == "cancelled":
+            result["reason"] = "Access Denied – Membership Cancelled"
+        else:  # 'expired', or 'active' whose end date has passed
+            result["reason"] = "Access Denied – Membership Expired"
+        return result
+
+    # 4. Member has not already checked in
+    if is_inside(member_id):
+        result["reason"] = "Access Denied – Already Checked In"
+        return result
+
+    result["ok"] = True
+    return result

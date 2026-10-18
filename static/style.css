@@ -85,3 +85,5 @@ textarea { padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-si
 .muted { color: #888; font-size: 0.85rem; }
 
 .badge-expiring { background: #fef3c7; color: #92400e; }
+
+.denied { color: #991b1b; font-weight: bold; font-size: 14px; }
