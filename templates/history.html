@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Member Attendance History{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>{{ member.first_name }} {{ member.last_name }}
+    <span class="badge badge-{{ member.status }}">{{ member.status }}</span></h1>
+  <a href="{{ url_for('attendance.history_search') }}" class="btn btn-light">Back to Search</a>
+</div>
+<p class="muted">Member Number: <strong>{{ member.member_number }}</strong></p>
+
+<form method="get" class="toolbar">
+  <label>From <input type="date" name="from" value="{{ date_from }}"></label>
+  <label>To <input type="date" name="to" value="{{ date_to }}"></label>
+  <button type="submit" class="btn">Filter</button>
+  <a href="{{ url_for('attendance.history', member_id=member.member_id) }}" class="btn btn-light">Reset</a>
+</form>
+
+<div class="form-card profile-card">
+  <table class="details">
+    <tr><th>Total Visits</th><td>{{ summary.total }}</td></tr>
+    <tr><th>Total Time</th><td>{{ summary.total_time }}</td></tr>
+    <tr><th>Average Visit</th><td>{{ summary.average }}</td></tr>
+  </table>
+</div>
+
+<table class="data-table">
+  <thead>
+    <tr><th>Date</th><th>Check-In</th><th>Check-Out</th><th>Duration</th></tr>
+  </thead>
+  <tbody>
+    {% for v in visits %}
+    <tr>
+      <td>{{ v.date }}</td>
+      <td>{{ v.check_in }}</td>
+      <td>{% if v.check_out %}{{ v.check_out }}{% else %}<span class="badge badge-active">Inside</span>{% endif %}</td>
+      <td>{{ v.duration }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4" class="muted">No attendance records.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

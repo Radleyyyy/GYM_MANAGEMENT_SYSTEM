@@ -3,7 +3,10 @@
 {% block content %}
 <div class="page-head">
   <h1>Member Check-In</h1>
-  <a href="{{ url_for('attendance.checkout') }}" class="btn btn-light">Go to Check-Out</a>
+  <div class="row-actions">
+    <a href="{{ url_for('attendance.checkout') }}" class="btn btn-light">Go to Check-Out</a>
+    <a href="{{ url_for('attendance.history_search') }}" class="btn btn-light">Attendance History</a>
+  </div>
 </div>
 <form method="get" class="toolbar">
   <input type="text" name="q" value="{{ q }}" placeholder="Enter member number or name" autofocus>

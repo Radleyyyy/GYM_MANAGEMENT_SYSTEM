@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Attendance History{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Attendance History</h1>
+  <a href="{{ url_for('attendance.checkin') }}" class="btn btn-light">Go to Check-In</a>
+</div>
+
+<form method="get" class="toolbar">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search member number or name" autofocus>
+  <button type="submit" class="btn">Search</button>
+  <a href="{{ url_for('attendance.history_search') }}" class="btn btn-light">Reset</a>
+</form>
+
+<p class="muted">
+  {% if q %}{{ members|length }} member(s) found{% else %}Recent visitors{% endif %}
+</p>
+<table class="data-table">
+  <thead>
+    <tr><th>Member</th><th>Status</th><th>Last Visit</th><th>Visits</th><th>Action</th></tr>
+  </thead>
+  <tbody>
+    {% for item in members %}
+    {% set m = item.member %}
+    <tr>
+      <td>{{ m.first_name }} {{ m.last_name }}<div class="muted">{{ m.member_number }}</div></td>
+      <td><span class="badge badge-{{ m.status }}">{{ m.status }}</span></td>
+      <td>{{ item.last_visit[:10] if item.last_visit else '-' }}</td>
+      <td>{{ item.visit_count if item.visit_count is not none else '-' }}</td>
+      <td><a href="{{ url_for('attendance.history', member_id=m.member_id) }}" class="btn btn-sm">View History</a></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="muted">No members found.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

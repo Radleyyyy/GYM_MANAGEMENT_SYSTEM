@@ -180,3 +180,52 @@ def checkout(attendance_id):
         return True
     finally:
         conn.close()
+
+
+# ===== Lab 16: attendance history =====
+def recent_visitors(limit=20):
+    """Members who have attendance records, most recent visitor first."""
+    conn = get_db()
+    rows = conn.execute(
+        """SELECT m.*, MAX(a.check_in_time) AS last_visit, COUNT(*) AS visit_count
+           FROM attendance a JOIN members m ON m.member_id = a.member_id
+           GROUP BY m.member_id ORDER BY last_visit DESC LIMIT ?""",
+        (limit,),
+    ).fetchall()
+    conn.close()
+    return rows
+
+
+def get_history(member_id, date_from=None, date_to=None):
+    """All visits of a member (newest first), optionally between two dates (YYYY-MM-DD)."""
+    sql = "SELECT * FROM attendance WHERE member_id = ?"
+    params = [member_id]
+    if date_from:
+        sql += " AND date(check_in_time) >= ?"
+        params.append(date_from)
+    if date_to:
+        sql += " AND date(check_in_time) <= ?"
+        params.append(date_to)
+    sql += " ORDER BY check_in_time DESC"
+    conn = get_db()
+    rows = conn.execute(sql, params).fetchall()
+    conn.close()
+    return rows
+
+
+def format_date(d):
+    return f"{d:%b} {d.day}, {d.year}"
+
+
+def format_time(t):
+    return f"{t.hour % 12 or 12}:{t.minute:02d} {'AM' if t.hour < 12 else 'PM'}"
+
+
+def format_duration(minutes):
+    if minutes is None:
+        return "-"
+    if minutes < 60:
+        return f"{minutes} min" + ("" if minutes == 1 else "s")
+    hours = round(minutes / 60, 1)
+    text = f"{hours:g}"
+    return f"{text} hr" + ("" if hours == 1 else "s")

@@ -78,3 +78,63 @@ def checkout_summary(attendance_id):
         flash("Attendance summary not available.", "error")
         return redirect(url_for("attendance.checkout"))
     return render_template("checkout_summary.html", visit=visit)
+
+
+# ===== Lab 16: attendance history =====
+@attendance_bp.route("/history")
+def history_search():
+    q = request.args.get("q", "").strip()
+    if q:
+        members = [{"member": m, "visit_count": None, "last_visit": None}
+                   for m in attendance_model.search_members(q)]
+    else:
+        members = [{"member": m, "visit_count": m["visit_count"], "last_visit": m["last_visit"]}
+                   for m in attendance_model.recent_visitors()]
+    return render_template("history_search.html", q=q, members=members)
+
+
+@attendance_bp.route("/history/<int:member_id>")
+def history(member_id):
+    member = attendance_model.get_member(member_id)
+    if member is None:
+        flash("Member not found.", "error")
+        return redirect(url_for("attendance.history_search"))
+
+    date_from = request.args.get("from", "").strip()
+    date_to = request.args.get("to", "").strip()
+    try:
+        d_from = date.fromisoformat(date_from) if date_from else None
+        d_to = date.fromisoformat(date_to) if date_to else None
+        if d_from and d_to and d_from > d_to:
+            raise ValueError
+    except ValueError:
+        flash("Invalid date range. Showing all visits.", "error")
+        date_from = date_to = ""
+
+    rows = attendance_model.get_history(member_id, date_from or None, date_to or None)
+    visits = []
+    total_minutes = completed = 0
+    for r in rows:
+        cin = datetime.strptime(r["check_in_time"], "%Y-%m-%d %H:%M:%S")
+        out_label = None
+        if r["check_out_time"]:
+            cout = datetime.strptime(r["check_out_time"], "%Y-%m-%d %H:%M:%S")
+            out_label = attendance_model.format_time(cout)
+            if cout.date() != cin.date():
+                out_label += " (next day)"
+        if r["duration_minutes"] is not None:
+            total_minutes += r["duration_minutes"]
+            completed += 1
+        visits.append({
+            "date": attendance_model.format_date(cin),
+            "check_in": attendance_model.format_time(cin),
+            "check_out": out_label,
+            "duration": attendance_model.format_duration(r["duration_minutes"]),
+        })
+    summary = {
+        "total": len(visits),
+        "total_time": attendance_model.format_duration(total_minutes) if completed else "-",
+        "average": attendance_model.format_duration(round(total_minutes / completed)) if completed else "-",
+    }
+    return render_template("history.html", member=member, visits=visits, summary=summary,
+                           date_from=date_from, date_to=date_to)

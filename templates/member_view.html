@@ -103,6 +103,7 @@
 
 <div class="form-card profile-card">
   <h2>Attendance History</h2>
+    <p><a href="{{ url_for('attendance.history', member_id=member.member_id) }}" class="btn btn-sm">View Full History</a></p>
   <table class="data-table">
     <thead>
       <tr><th>Date</th><th>Check-In</th><th>Check-Out</th><th>Duration</th></tr>
