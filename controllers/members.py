@@ -2,7 +2,7 @@ import re
 import sqlite3
 from datetime import date
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from models import member_model
+from models import member_model, membership_model
 
 members_bp = Blueprint("members", __name__, url_prefix="/members")
 
@@ -87,6 +87,7 @@ def success(member_id):
 
 @members_bp.route("/<int:member_id>")
 def view(member_id):
+    membership_model.expire_overdue()
     member = member_model.get_member(member_id)
     if member is None:
         flash("Member not found.", "error")

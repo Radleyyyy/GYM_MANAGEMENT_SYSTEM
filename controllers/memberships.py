@@ -91,3 +91,24 @@ def register():
         today=date.today().isoformat(),
         max_date=(date.today() + timedelta(days=MAX_ADVANCE_DAYS)).isoformat(),
     )
+
+@memberships_bp.route("/")
+def list_memberships():
+    """Lab 11: show every membership with its current status."""
+    expired_count = membership_model.mark_expired_memberships()
+    if expired_count:
+        flash(f"{expired_count} membership(s) passed the end date and are now expired.", "info")
+    return render_template(
+        "membership_list.html",
+        memberships=membership_model.list_memberships(),
+        status_rules=membership_model.STATUS_RULES,
+    )
+
+
+@memberships_bp.route("/<int:membership_id>/status", methods=["POST"])
+def update_status(membership_id):
+    """Lab 11: activate, suspend, or cancel a membership."""
+    new_status = request.form.get("new_status", "").strip()
+    ok, message = membership_model.change_status(membership_id, new_status)
+    flash(message, "success" if ok else "error")
+    return redirect(url_for("memberships.list_memberships"))

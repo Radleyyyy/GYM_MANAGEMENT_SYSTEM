@@ -66,3 +66,22 @@ textarea { padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-si
 .badge-best { background: #fde68a; color: #92400e; }
 .pick-list { display: flex; gap: 16px; flex-wrap: wrap; margin: 12px 0; }
 .pick-list label { flex-direction: row; align-items: center; gap: 6px; }
+
+.membership-table { width: 100%; border-collapse: collapse; }
+.membership-table th, .membership-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #ddd; }
+
+.status { padding: 3px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; }
+.status-active { background: #d4f5dd; color: #1b6e35; }
+.status-pending { background: #fff3cd; color: #8a6d00; }
+.status-suspended { background: #ffe5cc; color: #a24b00; }
+.status-expired { background: #f8d7da; color: #a12330; }
+.status-cancelled { background: #e2e3e5; color: #555; }
+
+.inline-form { display: inline-block; margin-right: 4px; }
+.inline-form button { padding: 4px 10px; border: 0; border-radius: 4px; cursor: pointer; color: #fff; }
+.btn-active { background: #2e9e4f; }
+.btn-suspended { background: #e08a1e; }
+.btn-cancelled { background: #c9353f; }
+.muted { color: #888; font-size: 0.85rem; }
+
+.badge-expiring { background: #fef3c7; color: #92400e; }
