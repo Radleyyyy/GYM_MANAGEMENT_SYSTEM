@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Member Check-Out{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Member Check-Out</h1>
+  <a href="{{ url_for('attendance.checkin') }}" class="btn btn-light">Go to Check-In</a>
+</div>
+
+<form method="get" class="toolbar">
+  <input type="text" name="q" value="{{ q }}" placeholder="Filter by member number or name" autofocus>
+  <button type="submit" class="btn">Search</button>
+  <a href="{{ url_for('attendance.checkout') }}" class="btn btn-light">Reset</a>
+</form>
+
+<p class="muted">{{ visits|length }} member(s) currently inside</p>
+<table class="data-table">
+  <thead>
+    <tr><th>Member</th><th>Membership</th><th>Checked In</th><th>Time Inside</th><th>Action</th></tr>
+  </thead>
+  <tbody>
+    {% for item in visits %}
+    {% set v = item.visit %}
+    <tr>
+      <td>{{ v.first_name }} {{ v.last_name }}<div class="muted">{{ v.member_number }}</div></td>
+      <td>{{ v.plan_name }}</td>
+      <td>{{ v.check_in_time[:10] }} {{ v.check_in_time[11:16] }}</td>
+      <td>{{ item.minutes_inside // 60 }} hr {{ item.minutes_inside % 60 }} min</td>
+      <td>
+        <form method="post" class="inline" action="{{ url_for('attendance.do_checkout', attendance_id=v.attendance_id) }}">
+          <button type="submit" class="btn btn-sm btn-warn">Check Out</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="muted">No members are currently inside.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

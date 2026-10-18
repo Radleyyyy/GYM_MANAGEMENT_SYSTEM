@@ -133,3 +133,50 @@ def validate_checkin(member_id):
 
     result["ok"] = True
     return result
+
+
+# ===== Lab 15: check-out =====
+def list_open_visits(q=""):
+    """Visits that are still open (members currently inside), optionally filtered."""
+    sql = """SELECT a.*, m.member_number, m.first_name, m.last_name, p.plan_name
+             FROM attendance a
+             JOIN members m ON m.member_id = a.member_id
+             JOIN memberships ms ON ms.membership_id = a.membership_id
+             JOIN membership_plans p ON p.plan_id = ms.plan_id
+             WHERE a.check_out_time IS NULL"""
+    params = []
+    if q:
+        like = f"%{q}%"
+        sql += """ AND (m.member_number LIKE ? OR m.first_name LIKE ? OR m.last_name LIKE ?
+                   OR (m.first_name || ' ' || m.last_name) LIKE ?)"""
+        params = [like] * 4
+    sql += " ORDER BY a.check_in_time"
+    conn = get_db()
+    rows = conn.execute(sql, params).fetchall()
+    conn.close()
+    return rows
+
+
+def checkout(attendance_id):
+    """Record the check-out time and visit duration (in minutes).
+    Returns True if saved, False if the visit was missing or already checked out."""
+    conn = get_db()
+    try:
+        row = conn.execute(
+            "SELECT check_in_time, check_out_time FROM attendance WHERE attendance_id = ?",
+            (attendance_id,),
+        ).fetchone()
+        if row is None or row["check_out_time"] is not None:
+            return False
+        check_in = datetime.strptime(row["check_in_time"], "%Y-%m-%d %H:%M:%S")
+        now = max(datetime.now().replace(microsecond=0), check_in)
+        minutes = round((now - check_in).total_seconds() / 60)
+        conn.execute(
+            """UPDATE attendance SET check_out_time = ?, duration_minutes = ?
+               WHERE attendance_id = ? AND check_out_time IS NULL""",
+            (now.strftime("%Y-%m-%d %H:%M:%S"), minutes, attendance_id),
+        )
+        conn.commit()
+        return True
+    finally:
+        conn.close()
