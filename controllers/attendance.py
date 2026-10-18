@@ -138,3 +138,41 @@ def history(member_id):
     }
     return render_template("history.html", member=member, visits=visits, summary=summary,
                            date_from=date_from, date_to=date_to)
+
+
+# ===== Lab 17: attendance monitoring =====
+@attendance_bp.route("/monitor")
+def monitor():
+    day = request.args.get("date", "").strip() or date.today().isoformat()
+    try:
+        date.fromisoformat(day)
+    except ValueError:
+        flash("Invalid date. Showing today.", "error")
+        day = date.today().isoformat()
+
+    stats = attendance_model.get_daily_stats(day)
+    hourly = attendance_model.get_hourly_counts(day)
+
+    peak = None
+    if hourly:
+        peak_hour = min(h for h, n in hourly.items() if n == max(hourly.values()))
+        peak = {"label": f"{attendance_model.hour_label(peak_hour)} – "
+                         f"{attendance_model.hour_label(peak_hour + 1)}",
+                "count": hourly[peak_hour]}
+
+    max_count = max(hourly.values()) if hourly else 1
+    hours = [{"label": attendance_model.hour_label(h), "count": hourly[h],
+              "percent": round(hourly[h] / max_count * 100)}
+             for h in sorted(hourly)]
+
+    now = datetime.now()
+    inside = []
+    for v in attendance_model.list_open_visits():
+        started = datetime.strptime(v["check_in_time"], "%Y-%m-%d %H:%M:%S")
+        minutes = max(0, int((now - started).total_seconds() // 60))
+        inside.append({"visit": v, "time_inside": attendance_model.format_duration(minutes)})
+
+    return render_template(
+        "monitor.html", day=day, is_today=(day == date.today().isoformat()),
+        stats=stats, average=attendance_model.format_duration(stats["avg_minutes"]),
+        peak=peak, hours=hours, inside=inside)

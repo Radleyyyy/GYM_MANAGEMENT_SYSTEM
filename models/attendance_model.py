@@ -229,3 +229,37 @@ def format_duration(minutes):
     hours = round(minutes / 60, 1)
     text = f"{hours:g}"
     return f"{text} hr" + ("" if hours == 1 else "s")
+
+
+# ===== Lab 17: attendance monitoring =====
+def get_daily_stats(day):
+    """Stats for one day (YYYY-MM-DD): distinct members, total visits, average duration."""
+    conn = get_db()
+    row = conn.execute(
+        """SELECT COUNT(DISTINCT member_id) AS members, COUNT(*) AS visits,
+                  AVG(duration_minutes) AS avg_minutes
+           FROM attendance WHERE date(check_in_time) = ?""",
+        (day,),
+    ).fetchone()
+    conn.close()
+    return {
+        "members": row["members"],
+        "visits": row["visits"],
+        "avg_minutes": round(row["avg_minutes"]) if row["avg_minutes"] is not None else None,
+    }
+
+
+def get_hourly_counts(day):
+    """Check-ins per hour of the day: {hour (0-23): count}."""
+    conn = get_db()
+    rows = conn.execute(
+        """SELECT CAST(substr(check_in_time, 12, 2) AS INTEGER) AS hr, COUNT(*) AS n
+           FROM attendance WHERE date(check_in_time) = ? GROUP BY hr""",
+        (day,),
+    ).fetchall()
+    conn.close()
+    return {r["hr"]: r["n"] for r in rows}
+
+
+def hour_label(h):
+    return f"{h % 12 or 12}:00 {'AM' if h % 24 < 12 else 'PM'}"
