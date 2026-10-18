@@ -7,8 +7,10 @@
   .stat-card .label { font-size: 13px; color: #6b7280; }
   .stat-card .value { font-size: 28px; font-weight: bold; color: #111827; margin-top: 4px; }
   .stat-card .sub { font-size: 12px; color: #6b7280; margin-top: 2px; }
-  .bar-track { background: #e5e7eb; border-radius: 4px; height: 14px; width: 100%; min-width: 200px; }
-  .bar-fill { background: #2563eb; border-radius: 4px; height: 14px; }
+  .bar-track { appearance: none; display: block; background: #e5e7eb; border: 0; border-radius: 4px; height: 14px; width: 100%; min-width: 200px; overflow: hidden; }
+  .bar-track::-webkit-progress-bar { background: #e5e7eb; border-radius: 4px; }
+  .bar-track::-webkit-progress-value { background: #2563eb; border-radius: 4px; }
+  .bar-track::-moz-progress-bar { background: #2563eb; border-radius: 4px; }
 </style>
 
 <div class="page-head">
@@ -58,7 +60,7 @@
       {% for h in hours %}
       <tr>
         <td>{{ h.label }}</td>
-        <td><div class="bar-track"><div class="bar-fill" style="width: {{ h.percent }}%"></div></div></td>
+        <td><progress class="bar-track" max="100" value="{{ h.percent }}">{{ h.percent }}%</progress></td>
         <td>{{ h.count }}</td>
       </tr>
       {% else %}

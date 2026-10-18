@@ -57,7 +57,7 @@
 {% endif %}
 
 <script>
-  const price = {{ m.membership_fee }};
+  const price = Number("{{ m.membership_fee or 0 }}");
   const dtype = document.getElementById("dtype"), disc = document.getElementById("disc"),
         chg = document.getElementById("chg"), live = document.getElementById("live");
   const num = s => { const n = parseFloat(String(s).replace(/,/g, "")); return isNaN(n) || n < 0 ? 0 : n; };
