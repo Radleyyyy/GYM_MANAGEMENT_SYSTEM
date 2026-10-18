@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Membership Renewal{% endblock %}
+{% block content %}
+<h1>Membership Renewal</h1>
+<form method="get" class="toolbar">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search member name or member number">
+  <button type="submit" class="btn">Search</button>
+  <a href="{{ url_for('renewals.search') }}" class="btn btn-light">Reset</a>
+</form>
+<p class="muted">
+  {% if q %}{{ results|length }} member(s) found{% else %}Showing members whose membership is expired or ending within 30 days{% endif %}
+</p>
+<table class="data-table">
+  <thead>
+    <tr><th>Member</th><th>Current Plan</th><th>Expires</th><th>Status</th><th>Action</th></tr>
+  </thead>
+  <tbody>
+    {% for r in results %}
+    <tr>
+      <td>{{ r.member.first_name }} {{ r.member.last_name }}<div class="muted">{{ r.member.member_number }}</div></td>
+      <td>{{ r.current.plan_name if r.current else '-' }}</td>
+      <td>{{ r.current.end_date if r.current else '-' }}
+        {% if r.days_left is not none %}
+        <div class="muted">
+          {% if r.days_left > 0 %}{{ r.days_left }} day(s) left{% elif r.days_left == 0 %}expires today{% else %}expired {{ -r.days_left }} day(s) ago{% endif %}
+        </div>
+        {% endif %}
+      </td>
+      <td>{% if r.effective_status %}<span class="badge badge-{{ r.effective_status }}">{{ r.effective_status }}</span>{% else %}-{% endif %}</td>
+      <td>
+        {% if r.eligible %}
+        <a href="{{ url_for('renewals.renew', member_id=r.member.member_id) }}" class="btn btn-sm">Renew</a>
+        {% else %}
+        <span class="muted">{{ r.reason }}</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="muted">No members found.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

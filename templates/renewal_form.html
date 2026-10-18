@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Renew Membership{% endblock %}
+{% block content %}
+<h1>Renew Membership</h1>
+
+<div class="form-card profile-card">
+  <h2>Current Membership</h2>
+  <table class="details">
+    <tr><th>Member</th><td>{{ ctx.member.member_number }} - {{ ctx.member.first_name }} {{ ctx.member.last_name }}</td></tr>
+    <tr><th>Plan</th><td>{{ ctx.current.plan_name }}</td></tr>
+    <tr><th>Period</th><td>{{ ctx.current.start_date }} to {{ ctx.current.end_date }}</td></tr>
+    <tr><th>Status</th><td><span class="badge badge-{{ ctx.effective_status }}">{{ ctx.effective_status }}</span>
+      <span class="muted">
+        {% if ctx.days_left > 0 %}({{ ctx.days_left }} day(s) left){% elif ctx.days_left == 0 %}(expires today){% else %}(expired {{ -ctx.days_left }} day(s) ago){% endif %}
+      </span></td></tr>
+  </table>
+</div>
+
+<form method="post" class="form-card">
+  <div class="grid">
+    <label class="full">Renewal Plan *
+      <select name="plan_id" id="plan" required>
+        <option value="">-- Select plan --</option>
+        {% for p in plans %}
+        <option value="{{ p.plan_id }}" data-months="{{ p.duration_months }}" data-price="{{ p.price }}"
+                {% if selected == p.plan_id|string %}selected{% endif %}>
+          {{ p.plan_name }} - {{ p.duration_months }} month(s) - ₱{{ '{:,.2f}'.format(p.price) }}
+        </option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>New Start Date
+      <input type="text" id="start" value="{{ base_start }}" readonly>
+    </label>
+    <label>New Expiration Date
+      <input type="text" id="end" value="-" readonly>
+    </label>
+    <label>Renewal Fee
+      <input type="text" id="fee" value="-" readonly>
+    </label>
+  </div>
+  <div class="actions">
+    <button type="submit" class="btn">Confirm Renewal</button>
+    <a href="{{ url_for('renewals.search') }}" class="btn btn-light">Cancel</a>
+  </div>
+</form>
+
+<script>
+  const plan = document.getElementById("plan");
+  const startIso = document.getElementById("start").value;
+  const pad = n => String(n).padStart(2, "0");
+
+  function preview() {
+    const opt = plan.options[plan.selectedIndex];
+    const endBox = document.getElementById("end");
+    const feeBox = document.getElementById("fee");
+    if (!opt.dataset.months) { endBox.value = "-"; feeBox.value = "-"; return; }
+    const [y, m, d] = startIso.split("-").map(Number);
+    const idx = m - 1 + Number(opt.dataset.months);
+    const ny = y + Math.floor(idx / 12), nm = idx % 12;
+    const last = new Date(ny, nm + 1, 0).getDate();
+    const end = new Date(ny, nm, Math.min(d, last) - 1);   // one day before the same date next period
+    endBox.value = end.getFullYear() + "-" + pad(end.getMonth() + 1) + "-" + pad(end.getDate());
+    feeBox.value = "₱" + Number(opt.dataset.price).toLocaleString("en-PH", {minimumFractionDigits: 2});
+  }
+  plan.addEventListener("change", preview);
+  preview();
+</script>
+{% endblock %}
