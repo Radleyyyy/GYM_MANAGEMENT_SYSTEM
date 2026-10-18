@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Check-In Successful{% endblock %}
+{% block content %}
+<h1>Check-In Successful</h1>
+<div class="form-card">
+  <p class="success-text">Welcome, {{ visit.first_name }}! You are now checked in.</p>
+  <table class="details">
+    <tr><th>Member Number</th><td>{{ visit.member_number }}</td></tr>
+    <tr><th>Name</th><td>{{ visit.first_name }} {{ visit.last_name }}</td></tr>
+    <tr><th>Membership</th><td>{{ visit.plan_name }}</td></tr>
+    <tr><th>Membership Expires</th><td>{{ visit.end_date }}
+      <span class="muted">({{ days_left }} day(s) left)</span></td></tr>
+    <tr><th>Check-In Date</th><td>{{ visit.check_in_time[:10] }}</td></tr>
+    <tr><th>Check-In Time</th><td>{{ visit.check_in_time[11:16] }}</td></tr>
+  </table>
+  <div class="actions">
+    <a href="{{ url_for('attendance.checkin') }}" class="btn">Check In Another Member</a>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-light">Go to Dashboard</a>
+  </div>
+</div>
+{% endblock %}

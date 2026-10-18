@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Member Check-In{% endblock %}
+{% block content %}
+<h1>Member Check-In</h1>
+<form method="get" class="toolbar">
+  <input type="text" name="q" value="{{ q }}" placeholder="Enter member number or name" autofocus>
+  <button type="submit" class="btn">Search</button>
+  <a href="{{ url_for('attendance.checkin') }}" class="btn btn-light">Reset</a>
+</form>
+
+{% if q %}
+<p class="muted">{{ results|length }} member(s) found</p>
+<table class="data-table">
+  <thead>
+    <tr><th>Member</th><th>Membership</th><th>Expires</th><th>Action</th></tr>
+  </thead>
+  <tbody>
+    {% for r in results %}
+    <tr>
+      <td>{{ r.member.first_name }} {{ r.member.last_name }}
+        <div class="muted">{{ r.member.member_number }}</div></td>
+      <td>
+        {% if r.membership %}<span class="badge badge-active">{{ r.membership.plan_name }}</span>
+        {% else %}<span class="badge badge-expired">No active membership</span>{% endif %}
+        {% if r.inside %}<span class="badge badge-pending">Inside</span>{% endif %}
+      </td>
+      <td>{{ r.membership.end_date if r.membership else '-' }}</td>
+      <td>
+        {% if not r.reason %}
+        <form method="post" class="inline" action="{{ url_for('attendance.do_checkin', member_id=r.member.member_id) }}">
+          <button type="submit" class="btn btn-sm">Check In</button>
+        </form>
+        {% else %}
+        <span class="muted">{{ r.reason }}</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4" class="muted">No members found.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="muted">Search by member number (e.g. GYM-0001) or name.</p>
+{% endif %}
+{% endblock %}
