@@ -87,3 +87,5 @@ textarea { padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-si
 .badge-expiring { background: #fef3c7; color: #92400e; }
 
 .denied { color: #991b1b; font-weight: bold; font-size: 14px; }
+
+.flash-info { background: #dbeafe; color: #1e40af; }

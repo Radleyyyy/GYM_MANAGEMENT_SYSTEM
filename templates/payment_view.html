@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Payment {{ p.payment_number }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Payment {{ p.payment_number }}</h1>
+  <a href="{{ url_for('payments.list_payments') }}" class="btn btn-light">Back to Payments</a>
+</div>
+
+<div class="form-card profile-card">
+  <table class="details">
+    <tr><th>Payment ID</th><td>{{ p.payment_id }}</td></tr>
+    <tr><th>Payment Number</th><td>{{ p.payment_number }}</td></tr>
+    <tr><th>Member</th><td>{{ p.member_number }} - {{ p.first_name }} {{ p.last_name }}</td></tr>
+    <tr><th>Membership</th><td>{{ p.plan_name }} ({{ p.start_date }} to {{ p.end_date }})</td></tr>
+    <tr><th>Payment Date</th><td>{{ p.payment_date }}</td></tr>
+    <tr><th>Payment Method</th><td>{{ p.method_name }}</td></tr>
+    <tr><th>Plan Price</th><td>₱{{ '{:,.2f}'.format(p.plan_price) }}</td></tr>
+    <tr><th>Discount</th><td>₱{{ '{:,.2f}'.format(p.discount) }}</td></tr>
+    <tr><th>Additional Charges</th><td>₱{{ '{:,.2f}'.format(p.additional_charges) }}</td></tr>
+    <tr><th>Amount Due</th><td>₱{{ '{:,.2f}'.format(p.amount_due) }}</td></tr>
+    <tr><th>Amount Paid</th><td>₱{{ '{:,.2f}'.format(p.amount_paid) }}</td></tr>
+    <tr><th>Balance</th><td>₱{{ '{:,.2f}'.format(p.balance) }}</td></tr>
+    <tr><th>Payment Status</th><td><span class="badge badge-{{ p.payment_status }}">{{ p.payment_status }}</span></td></tr>
+  </table>
+  {% if p.balance > 0 %}
+  <div class="actions">
+    <a href="{{ url_for('payments.new_payment', membership_id=p.membership_id) }}" class="btn">Pay Remaining Balance</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

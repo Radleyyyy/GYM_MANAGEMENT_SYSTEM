@@ -53,6 +53,9 @@
     <tr><th>Total Amount</th><td><strong>₱{{ '{:,.2f}'.format(bill.total) }}</strong></td></tr>
   </table>
   <p class="muted">Total Amount = Plan Price − Discount + Additional Charges</p>
+    <div class="actions">
+    <a href="{{ url_for('payments.new_payment', membership_id=m.membership_id) }}" class="btn">Record Payment</a>
+  </div>
 </div>
 {% endif %}
 

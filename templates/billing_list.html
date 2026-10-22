@@ -21,7 +21,8 @@
       <td><span class="badge badge-{{ ms.status }}">{{ ms.status }}</span></td>
       <td>₱{{ '{:,.2f}'.format(ms.membership_fee) }}</td>
       <td>₱{{ '{:,.2f}'.format(ms.paid) }}</td>
-      <td><a href="{{ url_for('billing.bill', membership_id=ms.membership_id) }}" class="btn btn-sm">Bill</a></td>
+            <td><a href="{{ url_for('billing.bill', membership_id=ms.membership_id) }}" class="btn btn-sm">Bill</a>
+        <a href="{{ url_for('payments.new_payment', membership_id=ms.membership_id) }}" class="btn btn-sm">Pay</a></td>
     </tr>
     {% else %}
     <tr><td colspan="7" class="muted">No memberships found.</td></tr>

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Record Payment{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Record Payment</h1>
+  <a href="{{ url_for('billing.list_memberships') }}" class="btn btn-light">Back to Billing</a>
+</div>
+
+<div class="form-card profile-card">
+  <h2>Membership</h2>
+  <table class="details">
+    <tr><th>Member</th><td>{{ m.member_number }} - {{ m.first_name }} {{ m.last_name }}</td></tr>
+    <tr><th>Membership</th><td>{{ m.plan_name }} ({{ m.start_date }} to {{ m.end_date }})
+      <span class="badge badge-{{ m.status }}">{{ m.status }}</span></td></tr>
+    <tr><th>Plan Price</th><td>₱{{ '{:,.2f}'.format(m.membership_fee) }}</td></tr>
+    <tr><th>Paid So Far</th><td>₱{{ '{:,.2f}'.format(m.paid) }}</td></tr>
+    {% if ctx.outstanding is not none %}
+    <tr><th>Outstanding Balance</th><td><strong>₱{{ '{:,.2f}'.format(ctx.outstanding) }}</strong></td></tr>
+    {% endif %}
+  </table>
+</div>
+
+<form method="post" class="form-card profile-card">
+  <h2>Payment Details</h2>
+  <div class="grid">
+    {% if ctx.outstanding is none %}
+    <label>Discount Type
+      <select name="discount_type" id="dtype">
+        <option value="amount" {% if form.discount_type == 'amount' %}selected{% endif %}>Amount (₱)</option>
+        <option value="percent" {% if form.discount_type == 'percent' %}selected{% endif %}>Percent (%)</option>
+      </select>
+    </label>
+    <label>Discount
+      <input type="text" name="discount" id="disc" value="{{ form.discount }}" placeholder="0" inputmode="decimal">
+    </label>
+    <label>Additional Charges (₱)
+      <input type="text" name="charges" id="chg" value="{{ form.charges }}" placeholder="0" inputmode="decimal">
+    </label>
+    {% endif %}
+    <label>Amount Due (₱)
+      <input type="text" id="due" value="-" readonly>
+    </label>
+    <label>Payment Method
+      <select name="method_id" required>
+        <option value="">Select method</option>
+        {% for pm in methods %}
+        <option value="{{ pm.method_id }}" {% if form.method_id == pm.method_id|string %}selected{% endif %}>{{ pm.method_name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Amount Paid (₱)
+      <input type="text" name="amount_paid" id="paid" value="{{ form.amount_paid }}" required inputmode="decimal">
+    </label>
+    <label>Balance After Payment (₱)
+      <input type="text" id="bal" value="-" readonly>
+    </label>
+  </div>
+  <p class="muted">Payment date is set to today. Payment status becomes "paid" when the balance is zero, otherwise "partial".</p>
+  <div class="actions">
+    <button type="submit" class="btn">Save Payment</button>
+    <a href="{{ url_for('billing.list_memberships') }}" class="btn btn-light">Cancel</a>
+  </div>
+</form>
+
+<script>
+  const price = Number("{{ m.membership_fee or 0 }}");
+  const outstandingValue = "{{ ctx.outstanding if ctx.outstanding is not none else '' }}";
+  const outstanding = outstandingValue === "" ? null : Number(outstandingValue);
+  const dtype = document.getElementById("dtype"), disc = document.getElementById("disc"),
+        chg = document.getElementById("chg"), due = document.getElementById("due"),
+        paid = document.getElementById("paid"), bal = document.getElementById("bal");
+  const num = s => { const n = parseFloat(String(s).replace(/,/g, "")); return isNaN(n) || n < 0 ? 0 : n; };
+  const money = n => "₱" + n.toLocaleString("en-PH", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  function amountDue() {
+    if (outstanding !== null) return outstanding;
+    let d = num(disc.value);
+    if (dtype.value === "percent") d = Math.round(price * Math.min(d, 100)) / 100;
+    d = Math.min(d, price);
+    return price - d + num(chg.value);
+  }
+  function update() {
+    const total = amountDue();
+    due.value = money(total);
+    bal.value = money(Math.max(total - num(paid.value), 0));
+  }
+  [dtype, disc, chg, paid].forEach(el => el && el.addEventListener("input", update));
+  update();
+</script>
+{% endblock %}
