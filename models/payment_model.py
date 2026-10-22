@@ -66,6 +66,29 @@ def _next_payment_number(conn):
     row = conn.execute("SELECT COALESCE(MAX(payment_id), 0) + 1 AS n FROM payments").fetchone()
     return f"PAY-{row['n']:04d}"
 
+def validate_payment(amount_due, amount_paid_text):
+    """Amount validation, overpayment check, balance calculation and payment status.
+    Returns (paid, balance, status). Raises ValueError with a message."""
+    text = (amount_paid_text or "").strip().replace(",", "")
+    if text == "":
+        raise ValueError("Amount paid is required.")
+    try:
+        paid = Decimal(text)
+    except InvalidOperation:
+        raise ValueError("Amount paid must be a number.")
+    if not paid.is_finite():
+        raise ValueError("Amount paid must be a number.")
+    if paid <= 0:
+        raise ValueError("Amount paid must be greater than zero.")
+    if paid > amount_due:
+        raise ValueError(
+            f"Overpayment: amount paid cannot be more than the amount due (₱{amount_due:,.2f}).")
+    if paid != paid.quantize(CENT, ROUND_HALF_UP):
+        raise ValueError("Amount paid can have at most 2 decimal places.")
+    paid = paid.quantize(CENT)
+    balance = amount_due - paid
+    status = "paid" if balance == 0 else "partial"
+    return paid, balance, status
 
 def record_payment(membership_id, method_id, amount_paid_text,
                    discount_type="amount", discount="", charges=""):
@@ -87,21 +110,7 @@ def record_payment(membership_id, method_id, amount_paid_text,
         disc = extra = Decimal("0")
         due = ctx["outstanding"]
 
-    text = (amount_paid_text or "").strip().replace(",", "")
-    try:
-        paid = Decimal(text)
-    except InvalidOperation:
-        raise ValueError("Amount paid must be a number.")
-    if not paid.is_finite():
-        raise ValueError("Amount paid must be a number.")
-    paid = paid.quantize(CENT, ROUND_HALF_UP)
-    if paid <= 0:
-        raise ValueError("Amount paid must be greater than zero.")
-    if paid > due:
-        raise ValueError(f"Amount paid cannot be more than the amount due (₱{due:,.2f}).")
-
-    balance = due - paid
-    status = "paid" if balance == 0 else "partial"
+        paid, balance, status = validate_payment(due, amount_paid_text)
 
     conn = get_db()
     try:

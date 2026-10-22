@@ -54,35 +54,62 @@
     <label>Balance After Payment (₱)
       <input type="text" id="bal" value="-" readonly>
     </label>
+  <label>Payment Status
+      <input type="text" id="stat" value="-" readonly>
+    </label>
   </div>
+  <p id="err" class="field-error"></p>
   <p class="muted">Payment date is set to today. Payment status becomes "paid" when the balance is zero, otherwise "partial".</p>
   <div class="actions">
     <button type="submit" class="btn">Save Payment</button>
+    <button type="button" class="btn btn-light" id="full">Pay Full Amount</button>
     <a href="{{ url_for('billing.list_memberships') }}" class="btn btn-light">Cancel</a>
   </div>
 </form>
 
 <script>
   const price = Number("{{ m.membership_fee or 0 }}");
-  const outstandingValue = "{{ ctx.outstanding if ctx.outstanding is not none else '' }}";
-  const outstanding = outstandingValue === "" ? null : Number(outstandingValue);
+  const outstanding = {% if ctx.outstanding is none %}null{% else %}Number("{{ ctx.outstanding }}"){% endif %};
   const dtype = document.getElementById("dtype"), disc = document.getElementById("disc"),
         chg = document.getElementById("chg"), due = document.getElementById("due"),
-        paid = document.getElementById("paid"), bal = document.getElementById("bal");
+        paid = document.getElementById("paid"), bal = document.getElementById("bal"),
+        stat = document.getElementById("stat"), err = document.getElementById("err"),
+        save = document.getElementById("save"), full = document.getElementById("full");
   const num = s => { const n = parseFloat(String(s).replace(/,/g, "")); return isNaN(n) || n < 0 ? 0 : n; };
+  const round2 = n => Math.round(n * 100) / 100;
   const money = n => "₱" + n.toLocaleString("en-PH", {minimumFractionDigits: 2, maximumFractionDigits: 2});
   function amountDue() {
     if (outstanding !== null) return outstanding;
     let d = num(disc.value);
     if (dtype.value === "percent") d = Math.round(price * Math.min(d, 100)) / 100;
     d = Math.min(d, price);
-    return price - d + num(chg.value);
+    return round2(price - d + num(chg.value));
   }
   function update() {
     const total = amountDue();
+    const text = paid.value.replace(/,/g, "").trim();
+    const amount = Number(text);
+    let message = "";
+    if (text !== "") {
+      if (isNaN(amount)) message = "Amount paid must be a number.";
+      else if (amount <= 0) message = "Amount paid must be greater than zero.";
+      else if (amount > total) message = "Overpayment: amount paid cannot be more than " + money(total) + ".";
+      else if (!/^\d+(\.\d{1,2})?$/.test(text)) message = "Enter a valid amount, for example 1500 or 1500.50.";
+    }
+    const ok = text !== "" && message === "";
     due.value = money(total);
-    bal.value = money(Math.max(total - num(paid.value), 0));
+    err.textContent = message;
+    save.disabled = !ok;
+    if (ok) {
+      const balance = round2(total - amount);
+      bal.value = money(balance);
+      stat.value = balance === 0 ? "Paid (full payment)" : "Partial payment";
+    } else {
+      bal.value = "-";
+      stat.value = "-";
+    }
   }
+  full.addEventListener("click", () => { paid.value = amountDue().toFixed(2); update(); });
   [dtype, disc, chg, paid].forEach(el => el && el.addEventListener("input", update));
   update();
 </script>
