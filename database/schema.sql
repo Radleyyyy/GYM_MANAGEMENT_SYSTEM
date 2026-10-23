@@ -7,7 +7,13 @@ DROP TABLE IF EXISTS memberships;
 DROP TABLE IF EXISTS payment_methods;
 DROP TABLE IF EXISTS membership_plans;
 DROP TABLE IF EXISTS members;
+DROP TABLE IF EXISTS courses;
 DROP TABLE IF EXISTS users;
+
+CREATE TABLE courses (
+    course_id   INTEGER PRIMARY KEY AUTOINCREMENT,
+    course_name TEXT NOT NULL UNIQUE COLLATE NOCASE
+);
 
 CREATE TABLE users (
     user_id       INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,6 +37,7 @@ CREATE TABLE members (
     email             TEXT NOT NULL UNIQUE,
     address           TEXT,
     emergency_contact TEXT,
+    course_id         INTEGER REFERENCES courses(course_id),
     registration_date TEXT NOT NULL DEFAULT (date('now')),
     status            TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','inactive','archived'))
 );
@@ -123,6 +130,7 @@ CREATE TABLE notifications (
 
 -- ===== SAMPLE DATA =====
 INSERT INTO payment_methods (method_name) VALUES ('Cash'),('Bank Transfer'),('E-wallet'),('Card');
+INSERT INTO courses (course_name) VALUES ('BSIT'),('BSBA'),('BSED'),('BSN'),('BEED');
 
 INSERT INTO membership_plans (plan_code, plan_name, duration_months, price, description, benefits) VALUES
 ('MON','Monthly',1,1000,'1-month access','Gym floor access'),
@@ -134,6 +142,9 @@ INSERT INTO members (member_number, first_name, last_name, gender, date_of_birth
 ('GYM-0001','Juan','Dela Cruz','Male','2000-05-14','09171234567','juan@example.com','Bayombong, Nueva Vizcaya','Maria Dela Cruz 09181234567'),
 ('GYM-0002','Maria','Santos','Female','1998-11-02','09172345678','maria@example.com','Solano, Nueva Vizcaya','Jose Santos 09182345678'),
 ('GYM-0003','Pedro','Reyes','Male','1995-03-21','09173456789','pedro@example.com','Bambang, Nueva Vizcaya','Ana Reyes 09183456789');
+UPDATE members SET course_id = 1 WHERE member_id = 1;
+UPDATE members SET course_id = 2 WHERE member_id = 2;
+UPDATE members SET course_id = 3 WHERE member_id = 3;
 
 INSERT INTO memberships (member_id, plan_id, start_date, end_date, membership_fee, status) VALUES
 (1,1,date('now','-10 days'),date('now','+20 days'),1000,'active'),

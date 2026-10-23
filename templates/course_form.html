@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Course' if editing else 'Add Course' }}{% endblock %}
+{% block content %}
+<h1>{{ 'Edit Course' if editing else 'Add Course' }}</h1>
+<form method="post" class="form-card">
+  <label>Course Name *
+    <input type="text" name="course_name" value="{{ name }}" maxlength="60" required>
+  </label>
+  <div class="actions">
+    <button type="submit" class="btn">{{ 'Save Changes' if editing else 'Add Course' }}</button>
+    <a href="{{ url_for('courses.list_courses') }}" class="btn btn-light">Cancel</a>
+  </div>
+</form>
+{% endblock %}

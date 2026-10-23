@@ -35,11 +35,11 @@ def create_member(f):
         cur = conn.execute(
             """INSERT INTO members
                (member_number, first_name, last_name, gender, date_of_birth,
-                contact_number, email, address, emergency_contact)
-               VALUES (?,?,?,?,?,?,?,?,?)""",
+                contact_number, email, address, emergency_contact, course_id)
+               VALUES (?,?,?,?,?,?,?,?,?,?)""",
             (number, f["first_name"], f["last_name"], f["gender"],
              f["date_of_birth"], f["contact_number"], f["email"],
-             f["address"], f["emergency_contact"]),
+             f["address"], f["emergency_contact"], int(f["course_id"])),
         )
         conn.commit()
         return cur.lastrowid
@@ -50,14 +50,17 @@ def create_member(f):
 def get_member(member_id):
     conn = get_db()
     row = conn.execute(
-        "SELECT * FROM members WHERE member_id = ?", (member_id,)
+                """SELECT m.*, c.course_name FROM members m
+           LEFT JOIN courses c ON c.course_id = m.course_id
+           WHERE m.member_id = ?""", (member_id,)
     ).fetchone()
     conn.close()
     return row
 
 
 def list_members(search="", status="all"):
-    sql = "SELECT * FROM members WHERE 1=1"
+    sql = """SELECT m.*, c.course_name FROM members m
+             LEFT JOIN courses c ON c.course_id = m.course_id WHERE 1=1"""
     params = []
     if status == "all":
         sql += " AND status != 'archived'"
@@ -83,10 +86,10 @@ def update_member(member_id, f):
         conn.execute(
             """UPDATE members SET first_name=?, last_name=?, gender=?,
                date_of_birth=?, contact_number=?, email=?, address=?,
-               emergency_contact=? WHERE member_id=?""",
+                              emergency_contact=?, course_id=? WHERE member_id=?""",
             (f["first_name"], f["last_name"], f["gender"], f["date_of_birth"],
              f["contact_number"], f["email"], f["address"],
-             f["emergency_contact"], member_id),
+             f["emergency_contact"], int(f["course_id"]), member_id),
         )
         conn.commit()
     finally:

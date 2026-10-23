@@ -2,18 +2,18 @@ import re
 import sqlite3
 from datetime import date
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from models import member_model, membership_model
+from models import member_model, membership_model, course_model
 
 members_bp = Blueprint("members", __name__, url_prefix="/members")
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 PHONE_RE = re.compile(r"^[0-9+\-\s]{7,15}$")
 FIELDS = ("first_name", "last_name", "gender", "date_of_birth",
-          "contact_number", "email", "address", "emergency_contact")
+          "contact_number", "email", "address", "emergency_contact", "course_id")
 REQUIRED = {
     "first_name": "First name", "last_name": "Last name", "gender": "Gender",
     "date_of_birth": "Date of birth", "contact_number": "Contact number",
-    "email": "Email",
+        "email": "Email", "course_id": "Course",
 }
 STATUSES = ("active", "inactive", "archived")
 
@@ -30,6 +30,8 @@ def validate(f, member_id=None):
         return errors
     if f["gender"] not in ("Male", "Female", "Other"):
         errors.append("Gender is invalid.")
+    if not (f["course_id"].isdigit() and course_model.get_course(int(f["course_id"]))):
+        errors.append("Please select a valid course.")
     try:
         dob = date.fromisoformat(f["date_of_birth"])
         if dob >= date.today():
@@ -73,7 +75,8 @@ def register():
                 return redirect(url_for("members.success", member_id=member_id))
             except sqlite3.IntegrityError:
                 flash("A member with this email or contact number already exists.", "error")
-    return render_template("member_form.html", form=form, editing=False)
+    return render_template("member_form.html", form=form, editing=False,
+                           courses=course_model.list_courses())
 
 
 @members_bp.route("/success/<int:member_id>")
@@ -126,7 +129,8 @@ def edit(member_id):
     else:
         form = {k: (member[k] or "") for k in FIELDS}
     return render_template("member_form.html", form=form, editing=True,
-                           member_number=member["member_number"])
+                           member_number=member["member_number"],
+                           courses=course_model.list_courses())
 
 
 @members_bp.route("/<int:member_id>/status", methods=["POST"])

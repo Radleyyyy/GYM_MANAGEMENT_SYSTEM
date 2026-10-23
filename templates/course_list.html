@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Courses{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Courses</h1>
+  <a href="{{ url_for('courses.add') }}" class="btn">+ Add Course</a>
+</div>
+<p class="muted">{{ courses|length }} course(s)</p>
+<table class="data-table">
+  <thead>
+    <tr><th>ID</th><th>Course Name</th><th>Members</th><th>Actions</th></tr>
+  </thead>
+  <tbody>
+    {% for c in courses %}
+    <tr>
+      <td>{{ c.course_id }}</td>
+      <td>{{ c.course_name }}</td>
+      <td>{{ c.member_count }}</td>
+      <td>
+        <div class="row-actions">
+          <a href="{{ url_for('courses.edit', course_id=c.course_id) }}" class="btn btn-sm btn-light">Edit</a>
+          <form method="post" action="{{ url_for('courses.delete', course_id=c.course_id) }}" class="inline"
+                onsubmit="return confirm('Delete this course?');">
+            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+          </form>
+        </div>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4" class="muted">No courses yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

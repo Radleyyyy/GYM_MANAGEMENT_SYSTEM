@@ -28,6 +28,15 @@
     <label>Email *
       <input type="email" name="email" value="{{ form.email }}" required>
     </label>
+        <label>Course *
+      <select name="course_id" required>
+        <option value="">-- Select a course --</option>
+        {% for c in courses %}
+        <option value="{{ c.course_id }}" {% if form.course_id|string == c.course_id|string %}selected{% endif %}>{{ c.course_name }}</option>
+        {% endfor %}
+      </select>
+      {% if not courses %}<span class="muted">No courses yet. <a href="{{ url_for('courses.add') }}">Add a course</a> first.</span>{% endif %}
+    </label>
     <label class="full">Address
       <input type="text" name="address" value="{{ form.address }}">
     </label>
