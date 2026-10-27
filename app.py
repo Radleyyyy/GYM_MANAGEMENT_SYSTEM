@@ -10,6 +10,13 @@ from controllers.billing import billing_bp
 from controllers.payments import payments_bp
 from controllers.courses import courses_bp
 
+
+import os
+from init_db import init_db
+
+if not os.path.exists(config.DATABASE):
+    init_db().close()
+
 app = Flask(__name__)
 app.config.from_object(config)
 app.register_blueprint(main_bp)
