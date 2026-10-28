@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Receipt RCT-{{ '%04d'|format(p.payment_id) }}{% endblock %}
+{% block content %}
+<div class="page-head no-print">
+  <h1>Payment Receipt</h1>
+  <div>
+    <button type="button" class="btn" onclick="window.print()">Print Receipt</button>
+    <a href="{{ url_for('payments.view_payment', payment_id=p.payment_id) }}" class="btn btn-light">Back to Payment</a>
+  </div>
+</div>
+
+<div class="receipt">
+  <div class="receipt-head">
+    <h2>{{ gym_name }}</h2>
+    <div>OFFICIAL PAYMENT RECEIPT</div>
+  </div>
+  <table class="receipt-table">
+    <tr><th>Receipt No.</th><td>RCT-{{ '%04d'|format(p.payment_id) }}</td></tr>
+    <tr><th>Member No.</th><td>{{ p.member_number }}</td></tr>
+    <tr><th>Member Name</th><td>{{ p.first_name }} {{ p.last_name }}</td></tr>
+    <tr><th>Membership Plan</th><td>{{ p.plan_name }}</td></tr>
+    <tr><th>Payment Date</th><td>{{ p.payment_date }}</td></tr>
+    <tr><th>Payment Method</th><td>{{ p.method_name }}</td></tr>
+    <tr><th>Amount Paid</th><td class="receipt-amount">₱{{ '{:,.2f}'.format(p.amount_paid) }}</td></tr>
+    <tr><th>Balance</th><td>₱{{ '{:,.2f}'.format(p.balance) }}</td></tr>
+    <tr><th>Payment Status</th><td><strong>{{ p.payment_status|upper }}</strong></td></tr>
+  </table>
+  <div class="receipt-foot">Ref: {{ p.payment_number }} &middot; Thank you!</div>
+</div>
+{% endblock %}

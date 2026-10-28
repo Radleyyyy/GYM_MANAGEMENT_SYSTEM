@@ -32,7 +32,8 @@
       <td>₱{{ '{:,.2f}'.format(p.amount_paid) }}</td>
       <td>₱{{ '{:,.2f}'.format(p.balance) }}</td>
       <td><span class="badge badge-{{ p.payment_status }}">{{ p.payment_status }}</span></td>
-      <td><a href="{{ url_for('payments.view_payment', payment_id=p.payment_id) }}" class="btn btn-sm">View</a></td>
+      <td><a href="{{ url_for('payments.view_payment', payment_id=p.payment_id) }}" class="btn btn-sm">View</a>
+        <a href="{{ url_for('payments.receipt', payment_id=p.payment_id) }}" class="btn btn-sm btn-light">Receipt</a></td>
     </tr>
     {% else %}
     <tr><td colspan="9" class="muted">No payments found.</td></tr>

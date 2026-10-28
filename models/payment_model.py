@@ -110,7 +110,7 @@ def record_payment(membership_id, method_id, amount_paid_text,
         disc = extra = Decimal("0")
         due = ctx["outstanding"]
 
-        paid, balance, status = validate_payment(due, amount_paid_text)
+    paid, balance, status = validate_payment(due, amount_paid_text)
 
     conn = get_db()
     try:

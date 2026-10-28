@@ -53,3 +53,12 @@ def view_payment(payment_id):
         flash("Payment not found.", "error")
         return redirect(url_for("payments.list_payments"))
     return render_template("payment_view.html", p=payment)
+
+
+@payments_bp.route("/<int:payment_id>/receipt")
+def receipt(payment_id):
+    payment = payment_model.get_payment(payment_id)
+    if payment is None:
+        flash("Payment not found.", "error")
+        return redirect(url_for("payments.list_payments"))
+    return render_template("payment_receipt.html", p=payment, gym_name="GymPro")
