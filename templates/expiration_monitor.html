@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Expiration Monitoring{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Membership Expiration Monitoring</h1>
+</div>
+
+<div class="exp-cards">
+  {% for key, info in filters.items() %}
+  <a href="{{ url_for('expiration.monitor', filter=key) }}"
+     class="exp-card {% if key == current %}exp-card-active{% endif %}">
+    <div class="exp-count">{{ counts[key] }}</div>
+    <div>{{ info[0] }}</div>
+    <div class="muted">{{ info[1] }}</div>
+  </a>
+  {% endfor %}
+</div>
+
+<h2>{{ filters[current][0] }}</h2>
+<p class="muted">{{ rows|length }} membership(s) found</p>
+<table class="data-table">
+  <thead>
+    <tr><th>Member</th><th>Plan</th><th>Start</th><th>End Date</th><th>Days Left</th><th>Status</th><th>Action</th></tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.first_name }} {{ r.last_name }}<div class="muted">{{ r.member_number }}</div></td>
+      <td>{{ r.plan_name }}</td>
+      <td>{{ r.start_date }}</td>
+      <td>{{ r.end_date }}</td>
+      <td>
+        {% if r.days_left < 0 %}Expired {{ -r.days_left }} day(s) ago
+        {% elif r.days_left == 0 %}Today
+        {% else %}{{ r.days_left }} day(s){% endif %}
+      </td>
+      <td><span class="status status-{{ r.status }}">{{ r.status }}</span></td>
+      <td><a href="{{ url_for('renewals.renew', member_id=r.member_id) }}" class="btn btn-sm">Renew</a>
+          <a href="{{ url_for('members.view', member_id=r.member_id) }}" class="btn btn-sm btn-light">Profile</a></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" class="muted">No memberships in this category.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
