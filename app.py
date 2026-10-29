@@ -10,6 +10,7 @@ from controllers.billing import billing_bp
 from controllers.payments import payments_bp
 from controllers.courses import courses_bp
 from controllers.expiration import expiration_bp
+from controllers.notifications import notifications_bp
 
 
 import os
@@ -28,9 +29,10 @@ _last_run = {"date": None}
 def auto_update_expirations():
     # Lab 23: run the automatic expiration processing once per day
     from datetime import date
-    from models import expiration_model
+    from models import expiration_model, notification_model
     if _last_run["date"] != date.today():
         expiration_model.update_statuses()
+        notification_model.generate_notifications()
         _last_run["date"] = date.today()
 
 app.register_blueprint(main_bp)
@@ -43,6 +45,7 @@ app.register_blueprint(billing_bp)
 app.register_blueprint(payments_bp)
 app.register_blueprint(courses_bp)
 app.register_blueprint(expiration_bp)
+app.register_blueprint(notifications_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)

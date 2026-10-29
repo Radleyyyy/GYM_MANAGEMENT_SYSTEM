@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Expiration Notifications</h1>
+  <div class="inline-actions">
+    <form method="post" action="{{ url_for('notifications.generate') }}" class="inline-form">
+      <button type="submit" class="btn">Generate Reminders</button>
+    </form>
+    <form method="post" action="{{ url_for('notifications.read_all') }}" class="inline-form">
+      <button type="submit" class="btn btn-light">Mark All Read</button>
+    </form>
+  </div>
+</div>
+
+<div class="toolbar">
+  <a href="{{ url_for('notifications.list_notifications') }}"
+     class="btn {% if unread_only %}btn-light{% endif %}">All</a>
+  <a href="{{ url_for('notifications.list_notifications', filter='unread') }}"
+     class="btn {% if not unread_only %}btn-light{% endif %}">Unread ({{ unread }})</a>
+</div>
+
+<p class="muted">{{ notifications|length }} notification(s)</p>
+<table class="data-table">
+  <thead>
+    <tr><th>Member</th><th>Type</th><th>Message</th><th>Created</th><th>Status</th><th>Action</th></tr>
+  </thead>
+  <tbody>
+    {% for n in notifications %}
+    <tr>
+      <td>{{ n.first_name }} {{ n.last_name }}<div class="muted">{{ n.member_number }}</div></td>
+      <td><span class="badge badge-{{ 'expired' if n.notification_type == 'expired' else 'expiring' }}">{{ labels[n.notification_type] }}</span></td>
+      <td>{{ n.message }}</td>
+      <td>{{ n.created_at }}</td>
+      <td>{% if n.is_read %}<span class="muted">Read</span>{% else %}<strong>Unread</strong>{% endif %}</td>
+      <td>
+        {% if not n.is_read %}
+        <form method="post" action="{{ url_for('notifications.read', notification_id=n.notification_id) }}" class="inline-form">
+          <button type="submit" class="btn btn-sm">Mark Read</button>
+        </form>
+        {% endif %}
+        <a href="{{ url_for('renewals.renew', member_id=n.member_id) }}" class="btn btn-sm btn-light">Renew</a>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="muted">No notifications.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from models import expiration_model
+from models import expiration_model, notification_model
 
 expiration_bp = Blueprint("expiration", __name__, url_prefix="/expiration")
 
@@ -22,5 +22,6 @@ def monitor():
 @expiration_bp.route("/update", methods=["POST"])
 def run_update():
     changed = expiration_model.update_statuses()
+    notification_model.generate_notifications()
     flash(f"Expiration processing done. {changed} membership(s) marked expired.", "success")
     return redirect(url_for("expiration.monitor"))
