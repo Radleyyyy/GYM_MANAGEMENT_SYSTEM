@@ -116,3 +116,11 @@ textarea { padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-si
 .exp-card:hover { border-color: #2563eb; }
 .exp-card-active { border: 2px solid #2563eb; background: #eff6ff; }
 .exp-count { font-size: 28px; font-weight: bold; }
+
+
+/* ===== Lab 25: reports ===== */
+.report-table { max-width: 420px; }
+.toolbar label { display: flex; flex-direction: row; align-items: center; gap: 6px; }
+@media print {
+  .exp-card { border: 1px solid #000; }
+}

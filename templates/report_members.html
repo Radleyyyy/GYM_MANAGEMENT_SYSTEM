@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Member Reports{% endblock %}
+{% block content %}
+<div class="page-head no-print">
+  <h1>Member Reports</h1>
+  <div>
+    <button type="button" class="btn" onclick="window.print()">Print Report</button>
+    <a href="{{ url_for('reports.index') }}" class="btn btn-light">Back to Reports</a>
+  </div>
+</div>
+
+<form method="get" class="toolbar no-print">
+  <label>From <input type="date" name="date_from" value="{{ date_from }}"></label>
+  <label>To <input type="date" name="date_to" value="{{ date_to }}"></label>
+  <button type="submit" class="btn">Apply</button>
+  <a href="{{ url_for('reports.members') }}" class="btn btn-light">Reset</a>
+</form>
+<p class="muted">Date range ({{ date_from }} to {{ date_to }}) applies to New Members and Registration Date only.</p>
+
+<div class="exp-cards">
+  <div class="exp-card"><div class="exp-count">{{ r.total }}</div><div>Total Members</div><div class="muted">All records</div></div>
+  <div class="exp-card"><div class="exp-count">{{ r.active }}</div><div>Active Members</div></div>
+  <div class="exp-card"><div class="exp-count">{{ r.inactive }}</div><div>Inactive Members</div></div>
+  <div class="exp-card"><div class="exp-count">{{ r.new_members|length }}</div><div>New Members</div><div class="muted">In date range</div></div>
+</div>
+
+<h2>Members by Gender</h2>
+<table class="data-table report-table">
+  <thead><tr><th>Gender</th><th>Members</th></tr></thead>
+  <tbody>
+    {% for g, n in r.gender.items() %}<tr><td>{{ g }}</td><td>{{ n }}</td></tr>{% endfor %}
+  </tbody>
+</table>
+<p class="muted">Excludes archived members.</p>
+
+<h2>Members by Age Group</h2>
+<table class="data-table report-table">
+  <thead><tr><th>Age Group</th><th>Members</th></tr></thead>
+  <tbody>
+    {% for g, n in r.ages.items() %}<tr><td>{{ g }}</td><td>{{ n }}</td></tr>{% endfor %}
+  </tbody>
+</table>
+
+<h2>Members by Registration Date</h2>
+<table class="data-table report-table">
+  <thead><tr><th>Month</th><th>New Members</th></tr></thead>
+  <tbody>
+    {% for row in r.by_month %}<tr><td>{{ row.month }}</td><td>{{ row.total }}</td></tr>
+    {% else %}<tr><td colspan="2" class="muted">No registrations in this range.</td></tr>{% endfor %}
+  </tbody>
+</table>
+
+<h2>New Members</h2>
+<table class="data-table">
+  <thead><tr><th>Member No.</th><th>Name</th><th>Registered</th><th>Status</th></tr></thead>
+  <tbody>
+    {% for m in r.new_members %}
+    <tr><td>{{ m.member_number }}</td><td>{{ m.first_name }} {{ m.last_name }}</td>
+        <td>{{ m.registration_date }}</td><td>{{ m.status }}</td></tr>
+    {% else %}<tr><td colspan="4" class="muted">No new members in this range.</td></tr>{% endfor %}
+  </tbody>
+</table>
+{% endblock %}

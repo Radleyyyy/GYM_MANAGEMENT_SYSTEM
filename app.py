@@ -11,6 +11,7 @@ from controllers.payments import payments_bp
 from controllers.courses import courses_bp
 from controllers.expiration import expiration_bp
 from controllers.notifications import notifications_bp
+from controllers.reports import reports_bp
 
 
 import os
@@ -46,6 +47,7 @@ app.register_blueprint(payments_bp)
 app.register_blueprint(courses_bp)
 app.register_blueprint(expiration_bp)
 app.register_blueprint(notifications_bp)
+app.register_blueprint(reports_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)

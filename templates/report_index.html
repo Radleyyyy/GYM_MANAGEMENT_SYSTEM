@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Reports</h1></div>
+<div class="exp-cards">
+  <a href="{{ url_for('reports.members') }}" class="exp-card">
+    <div class="exp-count">&#128101;</div>
+    <div>Member Reports</div>
+    <div class="muted">Totals, gender, age groups, registrations</div>
+  </a>
+</div>
+{% endblock %}
