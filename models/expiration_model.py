@@ -52,3 +52,39 @@ def list_memberships(key, today=None):
 def counts(today=None):
     today = today or date.today()
     return {key: len(list_memberships(key, today)) for key in FILTERS}
+
+
+def update_statuses(today=None):
+    """Lab 23: automatic expiration processing.
+    expiration_records.expiry_status: end > today -> active, end = today -> expiring, end < today -> expired.
+    memberships.status: active/pending memberships past their end date become expired.
+    Cancelled and suspended memberships are left alone.
+    Returns how many memberships were newly marked expired."""
+    t = (today or date.today()).isoformat()
+    conn = get_db()
+    try:
+        # make sure every live membership has an expiration record
+        conn.execute(
+            """INSERT INTO expiration_records (membership_id, expiration_date, expiry_status)
+               SELECT membership_id, end_date, 'active' FROM memberships
+               WHERE status IN ('active','pending','expired')
+                 AND membership_id NOT IN (SELECT membership_id FROM expiration_records)""")
+        conn.execute(
+            """UPDATE expiration_records
+               SET expiration_date = (SELECT end_date FROM memberships ms
+                                      WHERE ms.membership_id = expiration_records.membership_id),
+                   expiry_status = CASE
+                       WHEN expiration_date > ? THEN 'active'
+                       WHEN expiration_date = ? THEN 'expiring'
+                       ELSE 'expired' END,
+                   last_checked = CURRENT_TIMESTAMP
+               WHERE membership_id IN (SELECT membership_id FROM memberships
+                                       WHERE status IN ('active','pending','expired'))""",
+            (t, t))
+        cur = conn.execute(
+            "UPDATE memberships SET status = 'expired' "
+            "WHERE status IN ('active','pending') AND end_date < ?", (t,))
+        conn.commit()
+        return cur.rowcount
+    finally:
+        conn.close()

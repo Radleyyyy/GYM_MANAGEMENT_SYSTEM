@@ -3,6 +3,9 @@
 {% block content %}
 <div class="page-head">
   <h1>Membership Expiration Monitoring</h1>
+  <form method="post" action="{{ url_for('expiration.run_update') }}">
+    <button type="submit" class="btn">Run Status Update</button>
+  </form>
 </div>
 
 <div class="exp-cards">

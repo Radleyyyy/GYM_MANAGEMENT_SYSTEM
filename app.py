@@ -20,6 +20,19 @@ if not os.path.exists(config.DATABASE):
 
 app = Flask(__name__)
 app.config.from_object(config)
+
+_last_run = {"date": None}
+
+
+@app.before_request
+def auto_update_expirations():
+    # Lab 23: run the automatic expiration processing once per day
+    from datetime import date
+    from models import expiration_model
+    if _last_run["date"] != date.today():
+        expiration_model.update_statuses()
+        _last_run["date"] = date.today()
+
 app.register_blueprint(main_bp)
 app.register_blueprint(members_bp)
 app.register_blueprint(plans_bp)
