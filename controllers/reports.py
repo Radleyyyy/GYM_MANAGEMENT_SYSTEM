@@ -45,3 +45,18 @@ def attendance():
         date_from, date_to = date_to, date_from
     return render_template("report_attendance.html", r=report_model.attendance_report(date_from, date_to),
                            date_from=date_from, date_to=date_to)
+
+
+@reports_bp.route("/revenue")
+def revenue():
+    default_from, default_to = report_model.default_range()
+    date_from = report_model.valid_date(request.args.get("date_from")) or default_from
+    date_to = report_model.valid_date(request.args.get("date_to")) or default_to
+    if date_from > date_to:
+        date_from, date_to = date_to, date_from
+    pay_status = request.args.get("pay_status", "all")
+    if pay_status not in ("all", "paid", "partial", "unpaid", "outstanding"):
+        pay_status = "all"
+    return render_template("report_revenue.html",
+                           r=report_model.revenue_report(date_from, date_to, pay_status),
+                           date_from=date_from, date_to=date_to, pay_status=pay_status)

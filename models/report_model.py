@@ -176,3 +176,80 @@ def attendance_report(date_from, date_to):
         "daily": daily, "weekly": weekly, "monthly": monthly,
         "by_member": by_member, "top_members": by_member[:5], "peak_hours": peak_rows,
     }
+
+
+# ===== Lab 28: payment and revenue reports =====
+def revenue_report(date_from, date_to, pay_status="all"):
+    """Revenue figures use payments whose payment_date is in the range (revenue = amount paid).
+    The membership payment status / outstanding sections are current snapshots (all time)."""
+    where = "pay.payment_date BETWEEN ? AND ?"
+    p = (date_from, date_to)
+    conn = get_db()
+    try:
+        total = conn.execute(
+            f"SELECT COALESCE(SUM(pay.amount_paid), 0) AS revenue, COUNT(*) AS n FROM payments pay WHERE {where}",
+            p).fetchone()
+        renewal = conn.execute(
+            f"""SELECT COALESCE(SUM(pay.amount_paid), 0) FROM payments pay
+                JOIN memberships ms ON ms.membership_id = pay.membership_id
+                WHERE ms.is_renewal = 1 AND {where}""", p).fetchone()[0]
+        daily = conn.execute(
+            f"""SELECT pay.payment_date AS day, COUNT(*) AS n, SUM(pay.amount_paid) AS revenue
+                FROM payments pay WHERE {where} GROUP BY day ORDER BY day DESC""", p).fetchall()
+        weekly = conn.execute(
+            f"""SELECT date(pay.payment_date, '-6 days', 'weekday 1') AS week, COUNT(*) AS n,
+                       SUM(pay.amount_paid) AS revenue
+                FROM payments pay WHERE {where} GROUP BY week ORDER BY week DESC""", p).fetchall()
+        monthly = conn.execute(
+            f"""SELECT substr(pay.payment_date, 1, 7) AS month, COUNT(*) AS n,
+                       SUM(pay.amount_paid) AS revenue
+                FROM payments pay WHERE {where} GROUP BY month ORDER BY month DESC""", p).fetchall()
+        by_plan = conn.execute(
+            f"""SELECT pl.plan_name, COUNT(*) AS n, SUM(pay.amount_paid) AS revenue
+                FROM payments pay
+                JOIN memberships ms ON ms.membership_id = pay.membership_id
+                JOIN membership_plans pl ON pl.plan_id = ms.plan_id
+                WHERE {where} GROUP BY pl.plan_id ORDER BY revenue DESC""", p).fetchall()
+        by_method = conn.execute(
+            f"""SELECT pm.method_name, COUNT(*) AS n, SUM(pay.amount_paid) AS revenue
+                FROM payments pay JOIN payment_methods pm ON pm.method_id = pay.method_id
+                WHERE {where} GROUP BY pm.method_id ORDER BY revenue DESC""", p).fetchall()
+
+        # snapshot: payment status of every non-cancelled membership
+        rows = conn.execute(
+            """SELECT ms.membership_id, ms.start_date, ms.end_date, ms.membership_fee,
+                      m.member_number, m.first_name, m.last_name, pl.plan_name,
+                      COALESCE((SELECT SUM(amount_paid) FROM payments WHERE membership_id = ms.membership_id), 0) AS paid,
+                      (SELECT balance FROM payments WHERE membership_id = ms.membership_id
+                       ORDER BY payment_id DESC LIMIT 1) AS last_balance
+               FROM memberships ms
+               JOIN members m ON m.member_id = ms.member_id
+               JOIN membership_plans pl ON pl.plan_id = ms.plan_id
+               WHERE ms.status != 'cancelled'
+               ORDER BY ms.membership_id DESC""").fetchall()
+    finally:
+        conn.close()
+
+    statuses, counts, outstanding = [], {"paid": 0, "partial": 0, "unpaid": 0}, 0.0
+    for r in rows:
+        row = dict(r)
+        if r["last_balance"] is None:
+            row["pay_status"], row["balance"] = "unpaid", r["membership_fee"]
+        elif r["last_balance"] > 0:
+            row["pay_status"], row["balance"] = "partial", r["last_balance"]
+        else:
+            row["pay_status"], row["balance"] = "paid", 0.0
+        counts[row["pay_status"]] += 1
+        outstanding += row["balance"]
+        statuses.append(row)
+    if pay_status in counts:
+        statuses = [s for s in statuses if s["pay_status"] == pay_status]
+    elif pay_status == "outstanding":
+        statuses = [s for s in statuses if s["balance"] > 0]
+
+    return {
+        "revenue": total["revenue"], "payment_count": total["n"], "renewal_revenue": renewal,
+        "daily": daily, "weekly": weekly, "monthly": monthly,
+        "by_plan": by_plan, "by_method": by_method,
+        "counts": counts, "outstanding": outstanding, "statuses": statuses,
+    }

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Payment and Revenue Reports{% endblock %}
+{% macro peso(x) %}₱{{ '{:,.2f}'.format(x or 0) }}{% endmacro %}
+{% block content %}
+<div class="page-head no-print">
+  <h1>Payment &amp; Revenue Reports</h1>
+  <div>
+    <button type="button" class="btn" onclick="window.print()">Print Report</button>
+    <a href="{{ url_for('reports.index') }}" class="btn btn-light">Back to Reports</a>
+  </div>
+</div>
+
+<form method="get" class="toolbar no-print">
+  <input type="hidden" name="pay_status" value="{{ pay_status }}">
+  <label>From <input type="date" name="date_from" value="{{ date_from }}"></label>
+  <label>To <input type="date" name="date_to" value="{{ date_to }}"></label>
+  <button type="submit" class="btn">Apply</button>
+  <a href="{{ url_for('reports.revenue') }}" class="btn btn-light">Reset</a>
+</form>
+<p class="muted">Revenue = amount paid on payments dated {{ date_from }} to {{ date_to }}. Membership payment status and outstanding balances are current totals.</p>
+
+<div class="exp-cards">
+  <div class="exp-card"><div class="exp-count">{{ peso(r.revenue) }}</div><div>Total Revenue</div><div class="muted">{{ r.payment_count }} payment(s)</div></div>
+  <div class="exp-card"><div class="exp-count">{{ peso(r.renewal_revenue) }}</div><div>Renewal Revenue</div></div>
+  <div class="exp-card"><div class="exp-count">{{ peso(r.outstanding) }}</div><div>Outstanding Balances</div><div class="muted">Partial + unpaid</div></div>
+</div>
+
+<h2>Daily Revenue</h2>
+<table class="data-table report-table">
+  <thead><tr><th>Date</th><th>Payments</th><th>Revenue</th></tr></thead>
+  <tbody>
+    {% for d in r.daily %}<tr><td>{{ d.day }}</td><td>{{ d.n }}</td><td>{{ peso(d.revenue) }}</td></tr>
+    {% else %}<tr><td colspan="3" class="muted">No payments in this range.</td></tr>{% endfor %}
+  </tbody>
+</table>
+
+<h2>Weekly Revenue</h2>
+<table class="data-table report-table">
+  <thead><tr><th>Week Starting (Mon)</th><th>Payments</th><th>Revenue</th></tr></thead>
+  <tbody>
+    {% for w in r.weekly %}<tr><td>{{ w.week }}</td><td>{{ w.n }}</td><td>{{ peso(w.revenue) }}</td></tr>
+    {% else %}<tr><td colspan="3" class="muted">No payments in this range.</td></tr>{% endfor %}
+  </tbody>
+</table>
+
+<h2>Monthly Revenue</h2>
+<table class="data-table report-table">
+  <thead><tr><th>Month</th><th>Payments</th><th>Revenue</th></tr></thead>
+  <tbody>
+    {% for m in r.monthly %}<tr><td>{{ m.month }}</td><td>{{ m.n }}</td><td>{{ peso(m.revenue) }}</td></tr>
+    {% else %}<tr><td colspan="3" class="muted">No payments in this range.</td></tr>{% endfor %}
+  </tbody>
+</table>
+
+<h2>Revenue by Membership Plan</h2>
+<table class="data-table report-table">
+  <thead><tr><th>Plan</th><th>Payments</th><th>Revenue</th></tr></thead>
+  <tbody>
+    {% for pl in r.by_plan %}<tr><td>{{ pl.plan_name }}</td><td>{{ pl.n }}</td><td>{{ peso(pl.revenue) }}</td></tr>
+    {% else %}<tr><td colspan="3" class="muted">No payments in this range.</td></tr>{% endfor %}
+  </tbody>
+</table>
+
+<h2>Payment Method Summary</h2>
+<table class="data-table report-table">
+  <thead><tr><th>Method</th><th>Payments</th><th>Revenue</th></tr></thead>
+  <tbody>
+    {% for pm in r.by_method %}<tr><td>{{ pm.method_name }}</td><td>{{ pm.n }}</td><td>{{ peso(pm.revenue) }}</td></tr>
+    {% else %}<tr><td colspan="3" class="muted">No payments in this range.</td></tr>{% endfor %}
+  </tbody>
+</table>
+
+<h2>Membership Payment Status</h2>
+<div class="toolbar no-print">
+  {% for key, label in [('all', 'All'), ('paid', 'Paid (' ~ r.counts.paid ~ ')'), ('unpaid', 'Unpaid (' ~ r.counts.unpaid ~ ')'), ('partial', 'Partial (' ~ r.counts.partial ~ ')'), ('outstanding', 'With Balance')] %}
+  <a href="{{ url_for('reports.revenue', pay_status=key, date_from=date_from, date_to=date_to) }}"
+     class="btn {% if key != pay_status %}btn-light{% endif %}">{{ label }}</a>
+  {% endfor %}
+</div>
+<p class="muted">{{ r.statuses|length }} membership(s). Cancelled memberships are excluded. Unpaid memberships show the full membership fee as the balance.</p>
+<table class="data-table">
+  <thead><tr><th>Member</th><th>Plan</th><th>Period</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead>
+  <tbody>
+    {% for s in r.statuses %}
+    <tr>
+      <td>{{ s.first_name }} {{ s.last_name }}<div class="muted">{{ s.member_number }}</div></td>
+      <td>{{ s.plan_name }}</td>
+      <td>{{ s.start_date }} to {{ s.end_date }}</td>
+      <td>{{ peso(s.paid) }}</td>
+      <td>{{ peso(s.balance) }}</td>
+      <td><span class="badge badge-{{ s.pay_status }}">{{ s.pay_status }}</span></td>
+    </tr>
+    {% else %}<tr><td colspan="6" class="muted">No memberships in this category.</td></tr>{% endfor %}
+  </tbody>
+</table>
+{% endblock %}
