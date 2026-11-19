@@ -18,3 +18,19 @@ def members():
         date_from, date_to = date_to, date_from
     return render_template("report_members.html", r=report_model.member_report(date_from, date_to),
                            date_from=date_from, date_to=date_to)
+
+
+@reports_bp.route("/memberships")
+def memberships():
+    view = request.args.get("view", "active")
+    if view not in report_model.MEMBERSHIP_VIEWS:
+        view = "active"
+    default_from, default_to = report_model.default_range()
+    date_from = report_model.valid_date(request.args.get("date_from")) or default_from
+    date_to = report_model.valid_date(request.args.get("date_to")) or default_to
+    if date_from > date_to:
+        date_from, date_to = date_to, date_from
+    return render_template("report_memberships.html",
+                           r=report_model.membership_report(view, date_from, date_to),
+                           views=report_model.MEMBERSHIP_VIEWS, view=view,
+                           date_from=date_from, date_to=date_to)

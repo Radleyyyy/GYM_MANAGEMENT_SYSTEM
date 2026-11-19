@@ -68,3 +68,57 @@ def member_report(date_from, date_to, today=None):
 def default_range(today=None):
     today = today or date.today()
     return (today - timedelta(days=30)).isoformat(), today.isoformat()
+
+
+# ===== Lab 26: membership reports =====
+MEMBERSHIP_VIEWS = {
+    "active":    ("Active Memberships", "Status is active"),
+    "expired":   ("Expired Memberships", "Status is expired"),
+    "expiring":  ("Expiring Memberships", "Active, ends in the next 30 days"),
+    "new":       ("New Memberships", "First memberships created in date range"),
+    "renewed":   ("Renewed Memberships", "Renewals created in date range"),
+    "cancelled": ("Cancelled Memberships", "Status is cancelled"),
+}
+
+_MS_SELECT = """SELECT ms.membership_id, ms.start_date, ms.end_date, ms.membership_fee, ms.status,
+                       ms.is_renewal, date(ms.created_at) AS created_date,
+                       m.member_number, m.first_name, m.last_name, p.plan_name
+                FROM memberships ms
+                JOIN members m ON m.member_id = ms.member_id
+                JOIN membership_plans p ON p.plan_id = ms.plan_id"""
+
+
+def _membership_condition(view, date_from, date_to, today):
+    t = today.isoformat()
+    limit = (today + timedelta(days=30)).isoformat()
+    return {
+        "active": (" WHERE ms.status = 'active'", []),
+        "expired": (" WHERE ms.status = 'expired'", []),
+        "expiring": (" WHERE ms.status = 'active' AND ms.end_date BETWEEN ? AND ?", [t, limit]),
+        "new": (" WHERE ms.is_renewal = 0 AND date(ms.created_at) BETWEEN ? AND ?", [date_from, date_to]),
+        "renewed": (" WHERE ms.is_renewal = 1 AND date(ms.created_at) BETWEEN ? AND ?", [date_from, date_to]),
+        "cancelled": (" WHERE ms.status = 'cancelled'", []),
+    }[view]
+
+
+def membership_report(view, date_from, date_to, today=None):
+    today = today or date.today()
+    conn = get_db()
+    try:
+        counts = {}
+        for key in MEMBERSHIP_VIEWS:
+            cond, params = _membership_condition(key, date_from, date_to, today)
+            counts[key] = conn.execute(
+                "SELECT COUNT(*) FROM memberships ms" + cond, params).fetchone()[0]
+        cond, params = _membership_condition(view, date_from, date_to, today)
+        rows = conn.execute(_MS_SELECT + cond + " ORDER BY ms.end_date, ms.membership_id", params).fetchall()
+        by_plan = conn.execute(
+            """SELECT p.plan_name, COUNT(ms.membership_id) AS total,
+                      COALESCE(SUM(ms.status = 'active'), 0) AS active,
+                      COALESCE(SUM(ms.status = 'expired'), 0) AS expired,
+                      COALESCE(SUM(ms.status = 'cancelled'), 0) AS cancelled
+               FROM membership_plans p LEFT JOIN memberships ms ON ms.plan_id = p.plan_id
+               GROUP BY p.plan_id ORDER BY p.duration_months""").fetchall()
+    finally:
+        conn.close()
+    return {"counts": counts, "rows": rows, "by_plan": by_plan}
