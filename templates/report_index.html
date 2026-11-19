@@ -13,5 +13,10 @@
     <div>Membership Reports</div>
     <div class="muted">Active, expired, by plan, new, renewed</div>
   </a>
+  <a href="{{ url_for('reports.attendance') }}" class="exp-card">
+    <div class="exp-count">&#128197;</div>
+    <div>Attendance Reports</div>
+    <div class="muted">Daily, weekly, monthly, peak hours</div>
+  </a>
 </div>
 {% endblock %}

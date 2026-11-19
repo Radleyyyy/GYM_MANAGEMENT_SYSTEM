@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Attendance Reports{% endblock %}
+{% block content %}
+<div class="page-head no-print">
+  <h1>Attendance Reports</h1>
+  <div>
+    <button type="button" class="btn" onclick="window.print()">Print Report</button>
+    <a href="{{ url_for('reports.index') }}" class="btn btn-light">Back to Reports</a>
+  </div>
+</div>
+
+<form method="get" class="toolbar no-print">
+  <label>From <input type="date" name="date_from" value="{{ date_from }}"></label>
+  <label>To <input type="date" name="date_to" value="{{ date_to }}"></label>
+  <button type="submit" class="btn">Apply</button>
+  <a href="{{ url_for('reports.attendance') }}" class="btn btn-light">Reset</a>
+</form>
+<p class="muted">All figures cover check-ins from {{ date_from }} to {{ date_to }}.</p>
+
+<div class="exp-cards">
+  <div class="exp-card"><div class="exp-count">{{ r.visits }}</div><div>Total Visits</div></div>
+  <div class="exp-card"><div class="exp-count">{{ r.members }}</div><div>Members Who Visited</div></div>
+  <div class="exp-card"><div class="exp-count">{{ '%.1f'|format(r.avg_per_day) }}</div><div>Avg Visits / Day</div></div>
+  <div class="exp-card"><div class="exp-count">{{ '%.1f'|format(r.avg_per_member) }}</div><div>Avg Visits / Member</div></div>
+  <div class="exp-card"><div class="exp-count">{{ '%.0f'|format(r.avg_minutes) if r.avg_minutes is not none else '-' }}</div><div>Avg Minutes / Visit</div><div class="muted">Completed visits only</div></div>
+</div>
+
+<h2>Daily Attendance</h2>
+<table class="data-table report-table">
+  <thead><tr><th>Date</th><th>Visits</th><th>Members</th></tr></thead>
+  <tbody>
+    {% for d in r.daily %}<tr><td>{{ d.day }}</td><td>{{ d.visits }}</td><td>{{ d.members }}</td></tr>
+    {% else %}<tr><td colspan="3" class="muted">No visits in this range.</td></tr>{% endfor %}
+  </tbody>
+</table>
+
+<h2>Weekly Attendance</h2>
+<table class="data-table report-table">
+  <thead><tr><th>Week Starting (Mon)</th><th>Visits</th><th>Members</th></tr></thead>
+  <tbody>
+    {% for w in r.weekly %}<tr><td>{{ w.week }}</td><td>{{ w.visits }}</td><td>{{ w.members }}</td></tr>
+    {% else %}<tr><td colspan="3" class="muted">No visits in this range.</td></tr>{% endfor %}
+  </tbody>
+</table>
+
+<h2>Monthly Attendance</h2>
+<table class="data-table report-table">
+  <thead><tr><th>Month</th><th>Visits</th><th>Members</th></tr></thead>
+  <tbody>
+    {% for m in r.monthly %}<tr><td>{{ m.month }}</td><td>{{ m.visits }}</td><td>{{ m.members }}</td></tr>
+    {% else %}<tr><td colspan="3" class="muted">No visits in this range.</td></tr>{% endfor %}
+  </tbody>
+</table>
+
+<h2>Most Frequent Members</h2>
+<table class="data-table report-table">
+  <thead><tr><th>#</th><th>Member</th><th>Visits</th></tr></thead>
+  <tbody>
+    {% for m in r.top_members %}
+    <tr><td>{{ loop.index }}</td><td>{{ m.first_name }} {{ m.last_name }}<div class="muted">{{ m.member_number }}</div></td><td>{{ m.visits }}</td></tr>
+    {% else %}<tr><td colspan="3" class="muted">No visits in this range.</td></tr>{% endfor %}
+  </tbody>
+</table>
+
+<h2>Peak Attendance Hours</h2>
+<table class="data-table report-table">
+  <thead><tr><th>Hour</th><th>Visits</th><th></th></tr></thead>
+  <tbody>
+    {% for h in r.peak_hours %}
+    <tr {% if h.is_peak %}class="peak-row"{% endif %}>
+      <td>{{ h.hour }}{% if h.is_peak %} <strong>(peak)</strong>{% endif %}</td>
+      <td>{{ h.visits }}</td>
+      <td><div class="bar" style="width: {{ h.pct }}%"></div></td>
+    </tr>
+    {% else %}<tr><td colspan="3" class="muted">No visits in this range.</td></tr>{% endfor %}
+  </tbody>
+</table>
+
+<h2>Attendance by Member</h2>
+<table class="data-table">
+  <thead><tr><th>Member</th><th>Visits</th><th>Total Minutes</th><th>Avg Minutes</th><th>Last Visit</th></tr></thead>
+  <tbody>
+    {% for m in r.by_member %}
+    <tr>
+      <td>{{ m.first_name }} {{ m.last_name }}<div class="muted">{{ m.member_number }}</div></td>
+      <td>{{ m.visits }}</td>
+      <td>{{ m.total_minutes }}</td>
+      <td>{{ '%.0f'|format(m.avg_minutes) if m.avg_minutes is not none else '-' }}</td>
+      <td>{{ m.last_visit }}</td>
+    </tr>
+    {% else %}<tr><td colspan="5" class="muted">No visits in this range.</td></tr>{% endfor %}
+  </tbody>
+</table>
+{% endblock %}

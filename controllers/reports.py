@@ -34,3 +34,14 @@ def memberships():
                            r=report_model.membership_report(view, date_from, date_to),
                            views=report_model.MEMBERSHIP_VIEWS, view=view,
                            date_from=date_from, date_to=date_to)
+
+
+@reports_bp.route("/attendance")
+def attendance():
+    default_from, default_to = report_model.default_range()
+    date_from = report_model.valid_date(request.args.get("date_from")) or default_from
+    date_to = report_model.valid_date(request.args.get("date_to")) or default_to
+    if date_from > date_to:
+        date_from, date_to = date_to, date_from
+    return render_template("report_attendance.html", r=report_model.attendance_report(date_from, date_to),
+                           date_from=date_from, date_to=date_to)

@@ -124,3 +124,9 @@ textarea { padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-si
 @media print {
   .exp-card { border: 1px solid #000; }
 }
+
+
+/* ===== Lab 27: attendance reports ===== */
+.bar { background: #2563eb; height: 14px; border-radius: 3px; min-width: 4px; }
+.peak-row { background: #eff6ff; }
+.report-table td .bar { max-width: 160px; }

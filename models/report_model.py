@@ -122,3 +122,57 @@ def membership_report(view, date_from, date_to, today=None):
     finally:
         conn.close()
     return {"counts": counts, "rows": rows, "by_plan": by_plan}
+
+
+# ===== Lab 27: attendance reports =====
+def attendance_report(date_from, date_to):
+    """All figures cover visits whose check-in date falls between date_from and date_to."""
+    where = "date(a.check_in_time) BETWEEN ? AND ?"
+    p = (date_from, date_to)
+    conn = get_db()
+    try:
+        summary = conn.execute(
+            f"""SELECT COUNT(*) AS visits, COUNT(DISTINCT a.member_id) AS members,
+                       AVG(a.duration_minutes) AS avg_minutes
+                FROM attendance a WHERE {where}""", p).fetchone()
+        daily = conn.execute(
+            f"""SELECT date(a.check_in_time) AS day, COUNT(*) AS visits,
+                       COUNT(DISTINCT a.member_id) AS members
+                FROM attendance a WHERE {where} GROUP BY day ORDER BY day DESC""", p).fetchall()
+        weekly = conn.execute(
+            f"""SELECT date(a.check_in_time, '-6 days', 'weekday 1') AS week, COUNT(*) AS visits,
+                       COUNT(DISTINCT a.member_id) AS members
+                FROM attendance a WHERE {where} GROUP BY week ORDER BY week DESC""", p).fetchall()
+        monthly = conn.execute(
+            f"""SELECT substr(a.check_in_time, 1, 7) AS month, COUNT(*) AS visits,
+                       COUNT(DISTINCT a.member_id) AS members
+                FROM attendance a WHERE {where} GROUP BY month ORDER BY month DESC""", p).fetchall()
+        by_member = conn.execute(
+            f"""SELECT m.member_number, m.first_name, m.last_name, COUNT(*) AS visits,
+                       COALESCE(SUM(a.duration_minutes), 0) AS total_minutes,
+                       AVG(a.duration_minutes) AS avg_minutes,
+                       MAX(a.check_in_time) AS last_visit
+                FROM attendance a JOIN members m ON m.member_id = a.member_id
+                WHERE {where} GROUP BY m.member_id
+                ORDER BY visits DESC, m.last_name""", p).fetchall()
+        hours = {r["hr"]: r["n"] for r in conn.execute(
+            f"""SELECT CAST(substr(a.check_in_time, 12, 2) AS INTEGER) AS hr, COUNT(*) AS n
+                FROM attendance a WHERE {where} GROUP BY hr""", p)}
+    finally:
+        conn.close()
+
+    days = (date.fromisoformat(date_to) - date.fromisoformat(date_from)).days + 1
+    peak = max(hours.values()) if hours else 0
+    peak_rows = [{"hour": f"{h:02d}:00 - {h:02d}:59", "visits": hours.get(h, 0),
+                  "is_peak": peak > 0 and hours.get(h, 0) == peak,
+                  "pct": round(hours.get(h, 0) * 100 / peak) if peak else 0}
+                 for h in range(24) if hours.get(h, 0) > 0]
+    return {
+        "visits": summary["visits"],
+        "members": summary["members"],
+        "avg_minutes": summary["avg_minutes"],
+        "avg_per_day": summary["visits"] / days,
+        "avg_per_member": summary["visits"] / summary["members"] if summary["members"] else 0,
+        "daily": daily, "weekly": weekly, "monthly": monthly,
+        "by_member": by_member, "top_members": by_member[:5], "peak_hours": peak_rows,
+    }
