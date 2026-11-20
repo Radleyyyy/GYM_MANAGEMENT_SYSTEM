@@ -88,6 +88,9 @@
     </td></tr>
     <tr><th>Membership Fee</th><td>₱{{ '{:,.2f}'.format(membership.membership_fee) }}</td></tr>
     <tr><th>Membership Status</th><td><span class="badge badge-{{ membership.status }}">{{ membership.status }}</span></td></tr>
+    <tr><th>Payment</th><td><span class="badge badge-{{ pay_status }}">{{ pay_status }}</span>
+      {% if pay_status != 'paid' %} Balance ₱{{ '{:,.2f}'.format(pay_balance) }}
+      {% if membership.status != 'cancelled' and can('payments', 'POST') %}<a href="{{ url_for('payments.new_payment', membership_id=membership.membership_id) }}" class="btn btn-sm">Pay Now</a>{% endif %}{% endif %}</td></tr>
   </table>
   {% else %}
   <p class="muted">No membership yet.</p>

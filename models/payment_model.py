@@ -91,7 +91,7 @@ def validate_payment(amount_due, amount_paid_text):
     return paid, balance, status
 
 def record_payment(membership_id, method_id, amount_paid_text,
-                   discount_type="amount", discount="", charges=""):
+                   discount_type="amount", discount="", charges="", received_by=None):
     """Validates and saves one payment. Returns the new payment_id. Raises ValueError."""
     ctx = get_pay_context(membership_id)
     if ctx is None:
@@ -130,11 +130,18 @@ def record_payment(membership_id, method_id, amount_paid_text,
         cur = conn.execute(
             """INSERT INTO payments (payment_number, member_id, membership_id, method_id,
                    payment_date, plan_price, discount, additional_charges,
-                   amount_due, amount_paid, balance, payment_status)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+                   amount_due, amount_paid, balance, payment_status, received_by)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (_next_payment_number(conn), ms["member_id"], membership_id, method["method_id"],
              date.today().isoformat(), float(price), float(disc), float(extra),
-             float(due), float(paid), float(balance), status))
+             float(due), float(paid), float(balance), status, received_by))
+        # Lab 34: Payment -> Membership Status. The first payment activates a pending
+        # membership whose start date has arrived (and that has not expired).
+        conn.execute(
+            """UPDATE memberships SET status = 'active'
+               WHERE membership_id = ? AND status = 'pending'
+                 AND start_date <= ? AND end_date >= ?""",
+            (membership_id, date.today().isoformat(), date.today().isoformat()))
         conn.commit()
         return cur.lastrowid
     except Exception:
@@ -142,3 +149,17 @@ def record_payment(membership_id, method_id, amount_paid_text,
         raise
     finally:
         conn.close()
+
+
+def payment_summary(membership_id):
+    """Lab 34: (payment_status, balance) of a membership. No payment yet = unpaid, full fee."""
+    conn = get_db()
+    last = conn.execute(
+        "SELECT payment_status, balance FROM payments WHERE membership_id = ? ORDER BY payment_id DESC LIMIT 1",
+        (membership_id,)).fetchone()
+    fee = conn.execute("SELECT membership_fee FROM memberships WHERE membership_id = ?",
+                       (membership_id,)).fetchone()
+    conn.close()
+    if last is None:
+        return "unpaid", (fee["membership_fee"] if fee else 0)
+    return last["payment_status"], last["balance"]

@@ -2,7 +2,7 @@ import re
 import sqlite3
 from datetime import date
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from models import member_model, membership_model, course_model, expiration_model, attendance_model
+from models import member_model, membership_model, course_model, expiration_model, attendance_model, payment_model
 
 members_bp = Blueprint("members", __name__, url_prefix="/members")
 
@@ -103,9 +103,12 @@ def view(member_id):
     visits = member_model.get_attendance_history(member_id)
     # Lab 33: Member -> Active Membership? -> may this member check in right now?
     access = attendance_model.validate_checkin(member_id)
+    pay_status, pay_balance = (payment_model.payment_summary(membership["membership_id"])
+                               if membership else (None, 0))
     return render_template(
         "member_view.html", member=member, membership=membership,
         days_left=days_left, payments=payments, visits=visits, access=access,
+        pay_status=pay_status, pay_balance=pay_balance,
     )
 
 

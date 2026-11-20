@@ -92,6 +92,13 @@ def get_latest_membership(member_id):
     return row
 
 
+def _has_payment(membership_id):
+    conn = get_db()
+    row = conn.execute("SELECT 1 FROM payments WHERE membership_id = ?", (membership_id,)).fetchone()
+    conn.close()
+    return row is not None
+
+
 def validate_checkin(member_id):
     """Check every access rule. Returns a dict:
     {"ok": bool, "reason": "Access Denied – ..." or "", "member": row, "membership": row}"""
@@ -117,7 +124,10 @@ def validate_checkin(member_id):
         if latest is None:
             result["reason"] = "Access Denied – No Membership"
         elif latest["status"] == "pending":
-            result["reason"] = "Access Denied – Membership Not Yet Active"
+            if _has_payment(latest["membership_id"]):
+                result["reason"] = "Access Denied – Membership Not Yet Active"
+            else:
+                result["reason"] = "Access Denied – Payment Required"
         elif latest["status"] == "suspended":
             result["reason"] = "Access Denied – Membership Suspended"
         elif latest["status"] == "cancelled":

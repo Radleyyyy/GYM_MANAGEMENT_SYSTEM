@@ -81,7 +81,7 @@ def register():
             try:
                 membership_model.create_membership(member["member_id"], plan, start, end)
                 flash(f"Membership registered for {member['first_name']} {member['last_name']} "
-                      f"({plan['plan_name']}, {start} to {end}).", "success")
+                      f"({plan['plan_name']}, {start} to {end}). Status: pending until the first payment.", "success")
                 return redirect(url_for("members.view", member_id=member["member_id"]))
             except ValueError as e:
                 flash(str(e), "error")

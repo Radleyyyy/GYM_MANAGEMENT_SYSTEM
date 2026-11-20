@@ -1,5 +1,5 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
-from models import payment_model
+from flask import Blueprint, render_template, request, redirect, url_for, flash, g
+from models import payment_model, billing_model
 
 payments_bp = Blueprint("payments", __name__, url_prefix="/payments")
 
@@ -35,11 +35,18 @@ def new_payment(membership_id):
         try:
             payment_id = payment_model.record_payment(
                 membership_id, form["method_id"], form["amount_paid"],
-                form["discount_type"], form["discount"], form["charges"])
+                form["discount_type"], form["discount"], form["charges"],
+                received_by=g.user["user_id"])
         except ValueError as e:
             flash(str(e), "error")
         else:
-            flash("Payment recorded.", "success")
+            after = billing_model.get_membership(membership_id)
+            msg = "Payment recorded."
+            if ctx["membership"]["status"] == "pending" and after["status"] == "active":
+                msg += " The membership is now active."
+            elif after["status"] == "pending":
+                msg += f" The membership will become active on its start date ({after['start_date']})."
+            flash(msg, "success")
             return redirect(url_for("payments.view_payment", payment_id=payment_id))
 
     return render_template("payment_form.html", ctx=ctx, m=ctx["membership"], form=form,

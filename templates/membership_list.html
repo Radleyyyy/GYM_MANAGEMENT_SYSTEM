@@ -15,6 +15,7 @@
       <th>End</th>
       <th>Fee</th>
       <th>Status</th>
+      <th>Payment</th>
       <th>Actions</th>
     </tr>
   </thead>
@@ -28,7 +29,12 @@
       <td>{{ m.end_date }}</td>
       <td>{{ "%.2f"|format(m.membership_fee) }}</td>
       <td><span class="status status-{{ m.status }}">{{ m.status|capitalize }}</span></td>
+      <td><span class="badge badge-{{ m.payment_status }}">{{ m.payment_status }}</span>
+        {% if m.payment_status != 'paid' %}<div class="muted">Balance ₱{{ '{:,.2f}'.format(m.balance) }}</div>{% endif %}</td>
       <td>
+        {% if m.payment_status != 'paid' and m.status != 'cancelled' and can('payments', 'POST') %}
+        <a href="{{ url_for('payments.new_payment', membership_id=m.membership_id) }}" class="btn btn-sm">Pay</a>
+        {% endif %}
         {% for target in status_rules[m.status] %}
         <form method="post"
               action="{{ url_for('memberships.update_status', membership_id=m.membership_id) }}"
@@ -45,7 +51,7 @@
       </td>
     </tr>
     {% else %}
-    <tr><td colspan="8">No memberships yet.</td></tr>
+    <tr><td colspan="9">No memberships yet.</td></tr>
     {% endfor %}
   </tbody>
 </table>

@@ -51,7 +51,8 @@ def create_membership(member_id, plan, start, end):
     # Last line of defense: never save a wrongly calculated expiration date
     if end <= start or end != add_months(start, plan["duration_months"]):
         raise ValueError("Incorrect expiration date for the selected plan.")
-    status = "active" if start <= date.today() else "pending"
+    # Lab 34: a new membership waits for its first payment before it becomes active
+    status = "pending"
     conn = get_db()
     try:
         cur = conn.execute(
@@ -109,7 +110,11 @@ def list_memberships():
     rows = conn.execute(
         """SELECT ms.membership_id, ms.plan_id, ms.start_date, ms.end_date, ms.membership_fee,
                   ms.status, m.member_id, m.member_number, m.first_name, m.last_name,
-                  p.plan_name
+                  p.plan_name,
+                  COALESCE((SELECT payment_status FROM payments pay WHERE pay.membership_id = ms.membership_id
+                            ORDER BY pay.payment_id DESC LIMIT 1), 'unpaid') AS payment_status,
+                  COALESCE((SELECT balance FROM payments pay WHERE pay.membership_id = ms.membership_id
+                            ORDER BY pay.payment_id DESC LIMIT 1), ms.membership_fee) AS balance
            FROM memberships ms
            JOIN members m ON m.member_id = ms.member_id
            JOIN membership_plans p ON p.plan_id = ms.plan_id

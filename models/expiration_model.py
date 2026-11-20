@@ -84,6 +84,11 @@ def update_statuses(today=None):
         cur = conn.execute(
             "UPDATE memberships SET status = 'expired' "
             "WHERE status IN ('active','pending') AND end_date < ?", (t,))
+        # Lab 34: a paid, pending membership becomes active once its start date arrives
+        conn.execute(
+            """UPDATE memberships SET status = 'active'
+               WHERE status = 'pending' AND start_date <= ? AND end_date >= ?
+                 AND membership_id IN (SELECT membership_id FROM payments)""", (t, t))
         conn.commit()
         return cur.rowcount
     finally:
