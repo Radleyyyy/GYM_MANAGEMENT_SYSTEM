@@ -12,6 +12,7 @@ from controllers.courses import courses_bp
 from controllers.expiration import expiration_bp
 from controllers.notifications import notifications_bp
 from controllers.reports import reports_bp
+from controllers.auth import auth_bp, load_user_and_protect
 
 
 import os
@@ -22,6 +23,12 @@ if not os.path.exists(config.DATABASE):
 
 app = Flask(__name__)
 app.config.from_object(config)
+
+from models import user_model
+user_model.ensure_default_admin()
+
+# Lab 30: every request must pass the login check first
+app.before_request(load_user_and_protect)
 
 _last_run = {"date": None}
 
@@ -36,6 +43,7 @@ def auto_update_expirations():
         notification_model.generate_notifications()
         _last_run["date"] = date.today()
 
+app.register_blueprint(auth_bp)
 app.register_blueprint(main_bp)
 app.register_blueprint(members_bp)
 app.register_blueprint(plans_bp)

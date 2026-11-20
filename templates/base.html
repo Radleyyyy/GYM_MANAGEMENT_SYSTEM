@@ -21,6 +21,14 @@
     <a href="{{ url_for('expiration.monitor') }}">Expiration</a>
     <a href="{{ url_for('notifications.list_notifications') }}">Notifications</a>
     <a href="{{ url_for('reports.index') }}">Reports</a>
+    {% if g.user %}
+    <div class="userbox">
+      <strong>{{ g.user['full_name'] }}</strong><br>{{ g.user['role'] }}
+      <form method="post" action="{{ url_for('auth.logout') }}">
+        <button class="btn btn-light btn-sm" type="submit">Log Out</button>
+      </form>
+    </div>
+    {% endif %}
   </nav>
   <main class="content">
     {% with messages = get_flashed_messages(with_categories=true) %}
