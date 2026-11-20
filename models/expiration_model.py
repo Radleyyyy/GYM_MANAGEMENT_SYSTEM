@@ -12,7 +12,11 @@ FILTERS = {
 
 _SELECT = """SELECT ms.membership_id, ms.start_date, ms.end_date, ms.status,
                     m.member_id, m.member_number, m.first_name, m.last_name,
-                    m.contact_number, p.plan_name
+                    m.contact_number, p.plan_name,
+                    COALESCE((SELECT payment_status FROM payments pay WHERE pay.membership_id = ms.membership_id
+                              ORDER BY pay.payment_id DESC LIMIT 1), 'unpaid') AS payment_status,
+                    COALESCE((SELECT balance FROM payments pay WHERE pay.membership_id = ms.membership_id
+                              ORDER BY pay.payment_id DESC LIMIT 1), ms.membership_fee) AS balance
              FROM memberships ms
              JOIN members m ON m.member_id = ms.member_id
              JOIN membership_plans p ON p.plan_id = ms.plan_id
@@ -47,6 +51,11 @@ def list_memberships(key, today=None):
         row["days_left"] = (date.fromisoformat(r["end_date"]) - today).days
         result.append(row)
     return result
+
+
+def total_outstanding(rows):
+    """Lab 35: unpaid balance of the memberships in a list."""
+    return sum(r["balance"] for r in rows if r["payment_status"] != "paid")
 
 
 def counts(today=None):

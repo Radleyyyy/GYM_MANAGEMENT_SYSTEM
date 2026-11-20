@@ -80,7 +80,7 @@ def search_members(q=""):
 
 def save_renewal(member_id, plan, start, end):
     """Save the renewal as a new membership (is_renewal = 1) plus its expiration record."""
-    status = "active" if start <= date.today() else "pending"
+    status = "pending"   # Lab 35: a renewal becomes active only after payment (see Lab 34)
     today = date.today().isoformat()
     conn = get_db()
     try:

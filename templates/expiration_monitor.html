@@ -20,10 +20,11 @@
 </div>
 
 <h2>{{ filters[current][0] }}</h2>
-<p class="muted">{{ rows|length }} membership(s) found</p>
+<p class="muted">{{ rows|length }} membership(s) found
+  {% if outstanding > 0 %} &middot; Outstanding payments: <strong>₱{{ '{:,.2f}'.format(outstanding) }}</strong>{% endif %}</p>
 <table class="data-table">
   <thead>
-    <tr><th>Member</th><th>Plan</th><th>Start</th><th>End Date</th><th>Days Left</th><th>Status</th><th>Action</th></tr>
+    <tr><th>Member</th><th>Plan</th><th>Start</th><th>End Date</th><th>Days Left</th><th>Status</th><th>Payment</th><th>Action</th></tr>
   </thead>
   <tbody>
     {% for r in rows %}
@@ -38,11 +39,13 @@
         {% else %}{{ r.days_left }} day(s){% endif %}
       </td>
       <td><span class="status status-{{ r.status }}">{{ r.status }}</span></td>
-      <td><a href="{{ url_for('renewals.renew', member_id=r.member_id) }}" class="btn btn-sm">Renew</a>
-          <a href="{{ url_for('members.view', member_id=r.member_id) }}" class="btn btn-sm btn-light">Profile</a></td>
+      <td><span class="badge badge-{{ r.payment_status }}">{{ r.payment_status }}</span>
+        {% if r.payment_status != 'paid' %}<div class="muted">Balance ₱{{ '{:,.2f}'.format(r.balance) }}</div>{% endif %}</td>
+      <td>{% if can('renewals', 'POST') %}<a href="{{ url_for('renewals.renew', member_id=r.member_id) }}" class="btn btn-sm">Renew</a>{% endif %}
+          {% if can('members') %}<a href="{{ url_for('members.view', member_id=r.member_id) }}" class="btn btn-sm btn-light">Profile</a>{% endif %}</td>
     </tr>
     {% else %}
-    <tr><td colspan="7" class="muted">No memberships in this category.</td></tr>
+    <tr><td colspan="8" class="muted">No memberships in this category.</td></tr>
     {% endfor %}
   </tbody>
 </table>

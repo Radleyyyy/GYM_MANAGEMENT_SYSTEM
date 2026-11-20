@@ -10,9 +10,10 @@ def monitor():
     key = request.args.get("filter", "7days")
     if key not in expiration_model.FILTERS:
         key = "7days"
+    rows = expiration_model.list_memberships(key)
     return render_template(
         "expiration_monitor.html",
-        rows=expiration_model.list_memberships(key),
+        rows=rows, outstanding=expiration_model.total_outstanding(rows),
         counts=expiration_model.counts(),
         filters=expiration_model.FILTERS,
         current=key,

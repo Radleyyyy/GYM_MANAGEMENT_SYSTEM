@@ -13,6 +13,8 @@
       <span class="muted">
         {% if ctx.days_left > 0 %}({{ ctx.days_left }} day(s) left){% elif ctx.days_left == 0 %}(expires today){% else %}(expired {{ -ctx.days_left }} day(s) ago){% endif %}
       </span></td></tr>
+    <tr><th>Payment</th><td><span class="badge badge-{{ pay_status }}">{{ pay_status }}</span>
+      {% if pay_status != 'paid' %}<strong>Outstanding balance ₱{{ '{:,.2f}'.format(pay_balance) }}</strong>{% endif %}</td></tr>
   </table>
 </div>
 

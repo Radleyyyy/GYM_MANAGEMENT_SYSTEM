@@ -1,7 +1,7 @@
 import sqlite3
 from datetime import date
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from models import plan_model, renewal_model
+from models import plan_model, renewal_model, payment_model
 
 renewals_bp = Blueprint("renewals", __name__, url_prefix="/renewals")
 
@@ -42,11 +42,13 @@ def renew(member_id):
             try:
                 _, status = renewal_model.save_renewal(member_id, plan, start, end)
                 flash(f"Membership renewed ({plan['plan_name']}, {start} to {end}, "
-                      f"₱{plan['price']:,.2f}). Status: {status}.", "success")
+                      f"₱{plan['price']:,.2f}). Status: {status} until the first payment.", "success")
                 return redirect(url_for("members.view", member_id=member_id))
             except sqlite3.IntegrityError:
                 flash("Could not save the renewal: the member already has an active membership.", "error")
 
     base_start = max(current_end.toordinal() + 1, date.today().toordinal())
+    pay_status, pay_balance = payment_model.payment_summary(current["membership_id"])
     return render_template("renewal_form.html", ctx=ctx, plans=plans, selected=selected,
+                           pay_status=pay_status, pay_balance=pay_balance,
                            base_start=date.fromordinal(base_start).isoformat())
