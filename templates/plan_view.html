@@ -22,6 +22,9 @@
   </table>
 
   <div class="actions">
+    {% if plan.status == 'active' and can('memberships', 'POST') %}
+    <a href="{{ url_for('memberships.register', plan_id=plan.plan_id) }}" class="btn">Enroll Member in This Plan</a>
+    {% endif %}
     {% if can('plans', 'POST') %}
     {% if plan.status != 'archived' %}
     <a href="{{ url_for('plans.edit', plan_id=plan.plan_id) }}" class="btn">Edit</a>
@@ -54,4 +57,22 @@
     {% endif %}
   </div>
 </div>
+
+<h2>Members on This Plan</h2>
+<table class="data-table">
+  <thead><tr><th>Member No.</th><th>Name</th><th>Start</th><th>End</th><th>Status</th></tr></thead>
+  <tbody>
+    {% for pm in plan_members %}
+    <tr>
+      <td>{{ pm.member_number }}</td>
+      <td>{% if can('members') %}<a href="{{ url_for('members.view', member_id=pm.member_id) }}">{{ pm.first_name }} {{ pm.last_name }}</a>{% else %}{{ pm.first_name }} {{ pm.last_name }}{% endif %}</td>
+      <td>{{ pm.start_date }}</td>
+      <td>{{ pm.end_date }}</td>
+      <td>{{ pm.status|capitalize }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="muted">No members on this plan yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

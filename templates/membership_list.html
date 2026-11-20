@@ -22,8 +22,8 @@
     {% for m in memberships %}
     <tr>
       <td>{{ m.membership_id }}</td>
-      <td>{{ m.first_name }} {{ m.last_name }}</td>
-      <td>{{ m.plan_name }}</td>
+      <td>{% if can('members') %}<a href="{{ url_for('members.view', member_id=m.member_id) }}">{{ m.first_name }} {{ m.last_name }}</a>{% else %}{{ m.first_name }} {{ m.last_name }}{% endif %}</td>
+      <td>{% if can('plans') %}<a href="{{ url_for('plans.view', plan_id=m.plan_id) }}">{{ m.plan_name }}</a>{% else %}{{ m.plan_name }}{% endif %}</td>
       <td>{{ m.start_date }}</td>
       <td>{{ m.end_date }}</td>
       <td>{{ "%.2f"|format(m.membership_fee) }}</td>

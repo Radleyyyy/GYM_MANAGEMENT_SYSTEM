@@ -103,6 +103,7 @@ def view(plan_id):
         "plan_view.html", plan=plan,
         total_memberships=plan_model.count_memberships(plan_id),
         active_memberships=plan_model.count_active_memberships(plan_id),
+        plan_members=plan_model.list_plan_members(plan_id),
     )
 
 

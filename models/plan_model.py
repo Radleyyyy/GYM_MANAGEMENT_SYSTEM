@@ -130,3 +130,17 @@ def list_active_plans():
     ).fetchall()
     conn.close()
     return rows
+
+
+def list_plan_members(plan_id):
+    """Lab 32: every member enrolled in this plan, newest first."""
+    conn = get_db()
+    rows = conn.execute(
+        """SELECT m.member_id, m.member_number, m.first_name, m.last_name,
+                  ms.start_date, ms.end_date, ms.status
+           FROM memberships ms JOIN members m ON m.member_id = ms.member_id
+           WHERE ms.plan_id = ? ORDER BY ms.membership_id DESC""",
+        (plan_id,),
+    ).fetchall()
+    conn.close()
+    return rows

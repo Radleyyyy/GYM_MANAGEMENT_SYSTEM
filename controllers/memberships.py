@@ -67,6 +67,10 @@ def register():
         "plan_id": request.args.get("plan_id", ""),
         "start_date": date.today().isoformat(),
     }
+    if request.method == "GET" and form["member_id"].isdigit() \
+            and membership_model.has_open_membership(int(form["member_id"])):
+        flash("This member already has an active or pending membership.", "error")
+        form["member_id"] = ""
     if request.method == "POST":
         form = {k: request.form.get(k, "").strip() for k in form}
         errors, member, plan, start, end = validate(form)

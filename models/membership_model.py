@@ -25,7 +25,10 @@ def list_registrable_members():
     conn = get_db()
     rows = conn.execute(
         """SELECT member_id, member_number, first_name, last_name
-           FROM members WHERE status = 'active'
+           FROM members m WHERE status = 'active'
+             AND NOT EXISTS (SELECT 1 FROM memberships ms
+                             WHERE ms.member_id = m.member_id
+                               AND ms.status IN ('active','pending'))
            ORDER BY first_name, last_name"""
     ).fetchall()
     conn.close()
@@ -104,7 +107,7 @@ def change_status(membership_id, new_status):
 def list_memberships():
     conn = get_db()
     rows = conn.execute(
-        """SELECT ms.membership_id, ms.start_date, ms.end_date, ms.membership_fee,
+        """SELECT ms.membership_id, ms.plan_id, ms.start_date, ms.end_date, ms.membership_fee,
                   ms.status, m.member_id, m.member_number, m.first_name, m.last_name,
                   p.plan_name
            FROM memberships ms
