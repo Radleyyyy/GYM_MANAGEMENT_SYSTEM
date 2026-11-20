@@ -6,6 +6,30 @@
   <a href="{{ url_for('main.dashboard') }}" class="btn btn-light">Refresh</a>
 </div>
 
+<h2>System Workflow</h2>
+<div class="flow">
+  {% set steps = [
+    ('members', 'members.list_members', 'Members', d.kpi.total_members, 'registered'),
+    ('plans', 'plans.list_plans', 'Plans', d.kpi.plans, 'active plans'),
+    ('memberships', 'memberships.list_memberships', 'Memberships', d.kpi.memberships_total, d.kpi.awaiting_payment ~ ' awaiting first payment'),
+    ('billing', 'billing.list_memberships', 'Billing', d.kpi.with_balance, 'with a balance'),
+    ('payments', 'payments.list_payments', 'Payments', d.kpi.payments_month, 'this month'),
+    ('memberships', 'memberships.list_memberships', 'Active Membership', d.kpi.active_memberships, 'active now'),
+    ('attendance', 'attendance.checkin', 'Attendance', d.kpi.attendance_today, 'check-ins today'),
+    ('expiration', 'expiration.monitor', 'Expiration', d.kpi.expiring, 'ending in 30 days'),
+    ('renewals', 'renewals.search', 'Renewal', d.kpi.renewals, 'this month'),
+    ('reports', 'reports.index', 'Reports', None, 'view reports'),
+  ] %}
+  {% for module, endpoint, label, value, note in steps %}
+  {% if can(module) %}<a class="flow-step" href="{{ url_for(endpoint) }}">{% else %}<div class="flow-step">{% endif %}
+    <div class="flow-label">{{ loop.index }}. {{ label }}</div>
+    {% if value is not none %}<div class="flow-value">{{ value }}</div>{% endif %}
+    <div class="muted">{{ note }}</div>
+  {% if can(module) %}</a>{% else %}</div>{% endif %}
+  {% endfor %}
+</div>
+
+<h2>Key Figures</h2>
 <div class="kpi-grid">
   <a class="kpi" href="{{ url_for('members.list_members') }}"><div class="kpi-value">{{ d.kpi.total_members }}</div><div>Total Members</div></a>
   <a class="kpi" href="{{ url_for('members.list_members', status='active') }}"><div class="kpi-value">{{ d.kpi.active_members }}</div><div>Active Members</div></a>

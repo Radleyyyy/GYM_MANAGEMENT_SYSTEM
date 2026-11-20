@@ -46,6 +46,14 @@ def dashboard_data(today=None, months_back=6):
             "monthly_revenue": one(
                 "SELECT COALESCE(SUM(amount_paid), 0) FROM payments WHERE substr(payment_date, 1, 7) = ?",
                 month),
+            # Lab 36: counts for the workflow strip
+            "plans": one("SELECT COUNT(*) FROM membership_plans WHERE status = 'active'"),
+            "memberships_total": one("SELECT COUNT(*) FROM memberships WHERE status != 'cancelled'"),
+            "awaiting_payment": one(
+                """SELECT COUNT(*) FROM memberships WHERE status = 'pending'
+                   AND membership_id NOT IN (SELECT membership_id FROM payments)"""),
+            "payments_month": one(
+                "SELECT COUNT(*) FROM payments WHERE substr(payment_date, 1, 7) = ?", month),
             "renewals": one(
                 """SELECT COUNT(*) FROM memberships
                    WHERE is_renewal = 1 AND substr(date(created_at), 1, 7) = ?""", month),
@@ -71,7 +79,9 @@ def dashboard_data(today=None, months_back=6):
     finally:
         conn.close()
 
-    kpi["outstanding"] = report_model.revenue_report(t, t)["outstanding"]
+    revenue_info = report_model.revenue_report(t, t)
+    kpi["outstanding"] = revenue_info["outstanding"]
+    kpi["with_balance"] = revenue_info["counts"]["partial"] + revenue_info["counts"]["unpaid"]
 
     buckets = {"Today": 0, "1-7 days": 0, "8-14 days": 0, "15-30 days": 0}
     for e in ends:

@@ -149,3 +149,10 @@ textarea { padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-si
 .login-card .flash { max-width: none; }
 .sidebar .userbox { margin-top: 20px; padding-top: 14px; border-top: 1px solid #374151; color: #d1d5db; font-size: 13px; }
 .sidebar .userbox button { margin-top: 8px; width: 100%; }
+
+/* Lab 36: workflow strip */
+.flow { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 24px; }
+.flow-step { background: #fff; border: 1px solid #ddd; border-left: 4px solid #2563eb; border-radius: 8px; padding: 10px 12px; text-decoration: none; color: inherit; }
+a.flow-step:hover { border-color: #2563eb; }
+.flow-label { font-size: 13px; font-weight: bold; color: #374151; }
+.flow-value { font-size: 22px; font-weight: bold; }
