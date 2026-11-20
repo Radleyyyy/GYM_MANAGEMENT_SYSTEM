@@ -52,6 +52,22 @@
   </div>
 </div>
 
+{% if can('attendance') %}
+<div class="form-card profile-card">
+  <h2>Check-In Access</h2>
+  {% if access.ok %}
+  <p class="success-text">Access Allowed – active membership</p>
+  {% if can('attendance', 'POST') %}
+  <form method="post" action="{{ url_for('attendance.do_checkin', member_id=member.member_id) }}">
+    <button type="submit" class="btn">Check In</button>
+  </form>
+  {% endif %}
+  {% else %}
+  <p class="denied">{{ access.reason }}</p>
+  {% endif %}
+</div>
+{% endif %}
+
 <div class="form-card profile-card">
   <h2>Current Membership</h2>
   {% if can('memberships', 'POST') and member.status == 'active' and (not membership or membership.status not in ('active', 'pending')) %}
