@@ -3,7 +3,9 @@
 {% block content %}
 <div class="page-head">
   <h1>Members</h1>
+  {% if can('members', 'POST') %}
   <a href="{{ url_for('members.register') }}" class="btn">+ Register Member</a>
+  {% endif %}
 </div>
 
 <form method="get" class="toolbar">
@@ -39,6 +41,7 @@
       <td>
         <div class="row-actions">
           <a href="{{ url_for('members.view', member_id=m.member_id) }}" class="btn btn-sm">View</a>
+          {% if can('members', 'POST') %}
           <a href="{{ url_for('members.edit', member_id=m.member_id) }}" class="btn btn-sm btn-light">Edit</a>
 
           {% if m.status == 'active' %}
@@ -64,6 +67,7 @@
             <input type="hidden" name="status" value="active">
             <button type="submit" class="btn btn-sm">Restore</button>
           </form>
+          {% endif %}
           {% endif %}
         </div>
       </td>

@@ -19,6 +19,27 @@ def ensure_default_admin():
     conn.close()
 
 
+DEMO_USERS = [
+    ("manager", "Gym Manager", "Gym Manager"),
+    ("reception", "Front Desk Receptionist", "Receptionist"),
+    ("cashier", "Gym Cashier", "Cashier"),
+    ("trainer", "Gym Trainer", "Trainer"),
+    ("reports", "Report Officer", "Report Officer"),
+]
+
+
+def ensure_demo_users():
+    # Lab 31: one demo account per role (password: password123), added only if missing
+    conn = get_db()
+    for username, full_name, role in DEMO_USERS:
+        conn.execute(
+            "INSERT OR IGNORE INTO users (username, password_hash, full_name, role) VALUES (?,?,?,?)",
+            (username, generate_password_hash("password123"), full_name, role),
+        )
+    conn.commit()
+    conn.close()
+
+
 def get_user(user_id):
     conn = get_db()
     row = conn.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)).fetchone()

@@ -3,7 +3,9 @@
 {% block content %}
 <div class="page-head">
   <h1>Courses</h1>
+  {% if can('courses', 'POST') %}
   <a href="{{ url_for('courses.add') }}" class="btn">+ Add Course</a>
+  {% endif %}
 </div>
 <p class="muted">{{ courses|length }} course(s)</p>
 <table class="data-table">
@@ -18,11 +20,13 @@
       <td>{{ c.member_count }}</td>
       <td>
         <div class="row-actions">
+          {% if can('courses', 'POST') %}
           <a href="{{ url_for('courses.edit', course_id=c.course_id) }}" class="btn btn-sm btn-light">Edit</a>
           <form method="post" action="{{ url_for('courses.delete', course_id=c.course_id) }}" class="inline"
                 onsubmit="return confirm('Delete this course?');">
             <button type="submit" class="btn btn-sm btn-danger">Delete</button>
           </form>
+          {% endif %}
         </div>
       </td>
     </tr>

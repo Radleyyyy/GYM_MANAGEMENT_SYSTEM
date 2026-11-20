@@ -8,19 +8,45 @@
 <body>
   <nav class="sidebar">
     <h2>GymPro</h2>
+    {% if can('main') %}
     <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+    {% endif %}
+    {% if can('members') %}
     <a href="{{ url_for('members.list_members') }}">Members</a>
+    {% endif %}
+    {% if can('members', 'POST') %}
     <a href="{{ url_for('members.register') }}">Register Member</a>
+    {% endif %}
+    {% if can('plans') %}
     <a href="{{ url_for('plans.list_plans') }}">Plans</a>
+    {% endif %}
+    {% if can('courses') %}
     <a href="{{ url_for('courses.list_courses') }}">Courses</a>
+    {% endif %}
+    {% if can('memberships') %}
     <a href="{{ url_for('memberships.list_memberships') }}">Memberships</a>
+    {% endif %}
+    {% if can('renewals') %}
     <a href="{{ url_for('renewals.search') }}">Renewals</a>
+    {% endif %}
+    {% if can('attendance') %}
     <a href="{{ url_for('attendance.checkin') }}">Attendance</a>
+    {% endif %}
+    {% if can('billing') %}
     <a href="{{ url_for('billing.list_memberships') }}">Billing</a>
+    {% endif %}
+    {% if can('payments') %}
     <a href="{{ url_for('payments.list_payments') }}">Payments</a>
+    {% endif %}
+    {% if can('expiration') %}
     <a href="{{ url_for('expiration.monitor') }}">Expiration</a>
+    {% endif %}
+    {% if can('notifications') %}
     <a href="{{ url_for('notifications.list_notifications') }}">Notifications</a>
+    {% endif %}
+    {% if can('reports') %}
     <a href="{{ url_for('reports.index') }}">Reports</a>
+    {% endif %}
     {% if g.user %}
     <div class="userbox">
       <strong>{{ g.user['full_name'] }}</strong><br>{{ g.user['role'] }}

@@ -5,7 +5,9 @@
   <h1>Membership Plans</h1>
     <div class="row-actions">
     <a href="{{ url_for('plans.compare') }}" class="btn btn-light">Compare Plans</a>
+    {% if can('plans', 'POST') %}
     <a href="{{ url_for('plans.register') }}" class="btn">+ Add Plan</a>
+    {% endif %}
   </div>
 </div>
 
@@ -47,6 +49,7 @@
       <td>
         <div class="row-actions">
           <a href="{{ url_for('plans.view', plan_id=p.plan_id) }}" class="btn btn-sm">View</a>
+          {% if can('plans', 'POST') %}
           {% if p.status != 'archived' %}
           <a href="{{ url_for('plans.edit', plan_id=p.plan_id) }}" class="btn btn-sm btn-light">Edit</a>
           {% endif %}
@@ -74,6 +77,7 @@
             <input type="hidden" name="status" value="inactive">
             <button type="submit" class="btn btn-sm">Restore</button>
           </form>
+          {% endif %}
           {% endif %}
         </div>
       </td>

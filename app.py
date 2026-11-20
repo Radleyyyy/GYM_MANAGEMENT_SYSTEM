@@ -12,7 +12,7 @@ from controllers.courses import courses_bp
 from controllers.expiration import expiration_bp
 from controllers.notifications import notifications_bp
 from controllers.reports import reports_bp
-from controllers.auth import auth_bp, load_user_and_protect
+from controllers.auth import auth_bp, load_user_and_protect, inject_permissions, forbidden
 
 
 import os
@@ -26,9 +26,12 @@ app.config.from_object(config)
 
 from models import user_model
 user_model.ensure_default_admin()
+user_model.ensure_demo_users()
 
 # Lab 30: every request must pass the login check first
 app.before_request(load_user_and_protect)
+app.context_processor(inject_permissions)
+app.register_error_handler(403, forbidden)
 
 _last_run = {"date": None}
 

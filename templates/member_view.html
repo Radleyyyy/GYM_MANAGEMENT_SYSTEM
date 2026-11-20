@@ -21,6 +21,7 @@
     <tr><th>Registration Date</th><td>{{ member.registration_date }}</td></tr>
   </table>
   <div class="actions">
+    {% if can('members', 'POST') %}
     <a href="{{ url_for('members.edit', member_id=member.member_id) }}" class="btn">Edit</a>
 
     {% if member.status == 'active' %}
@@ -47,12 +48,13 @@
       <button type="submit" class="btn">Restore</button>
     </form>
     {% endif %}
+    {% endif %}
   </div>
 </div>
 
 <div class="form-card profile-card">
   <h2>Current Membership</h2>
-  {% if member.status == 'active' and (not membership or membership.status not in ('active', 'pending')) %}
+  {% if can('memberships', 'POST') and member.status == 'active' and (not membership or membership.status not in ('active', 'pending')) %}
 <p><a href="{{ url_for('memberships.register', member_id=member.member_id) }}" class="btn">Register Membership</a></p>
 {% endif %}
   {% if membership %}
