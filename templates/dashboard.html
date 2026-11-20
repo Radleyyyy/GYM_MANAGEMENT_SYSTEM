@@ -1,5 +1,58 @@
 {% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
 {% block content %}
-<h1>Dashboard</h1>
-<p>Welcome to the Gym Management System.</p>
+<div class="page-head">
+  <h1>Dashboard</h1>
+  <a href="{{ url_for('main.dashboard') }}" class="btn btn-light">Refresh</a>
+</div>
+
+<div class="kpi-grid">
+  <a class="kpi" href="{{ url_for('members.list_members') }}"><div class="kpi-value">{{ d.kpi.total_members }}</div><div>Total Members</div></a>
+  <a class="kpi" href="{{ url_for('members.list_members', status='active') }}"><div class="kpi-value">{{ d.kpi.active_members }}</div><div>Active Members</div></a>
+  <a class="kpi" href="{{ url_for('reports.memberships', view='expired') }}"><div class="kpi-value">{{ d.kpi.expired_members }}</div><div>Expired Members</div></a>
+  <a class="kpi" href="{{ url_for('expiration.monitor', filter='30days') }}"><div class="kpi-value">{{ d.kpi.expiring }}</div><div>Expiring Memberships</div><div class="muted">Next 30 days</div></a>
+  <a class="kpi" href="{{ url_for('reports.memberships', view='active') }}"><div class="kpi-value">{{ d.kpi.active_memberships }}</div><div>Active Memberships</div></a>
+  <a class="kpi" href="{{ url_for('reports.attendance') }}"><div class="kpi-value">{{ d.kpi.attendance_today }}</div><div>Today's Attendance</div></a>
+  <a class="kpi" href="{{ url_for('attendance.checkin') }}"><div class="kpi-value">{{ d.kpi.inside_now }}</div><div>Members Inside Now</div></a>
+  <a class="kpi" href="{{ url_for('reports.revenue') }}"><div class="kpi-value">₱{{ '{:,.2f}'.format(d.kpi.monthly_revenue) }}</div><div>Monthly Revenue</div><div class="muted">This month</div></a>
+  <a class="kpi" href="{{ url_for('reports.revenue', pay_status='outstanding') }}"><div class="kpi-value">₱{{ '{:,.2f}'.format(d.kpi.outstanding) }}</div><div>Outstanding Payments</div></a>
+  <a class="kpi" href="{{ url_for('reports.memberships', view='renewed') }}"><div class="kpi-value">{{ d.kpi.renewals }}</div><div>Membership Renewals</div><div class="muted">This month</div></a>
+</div>
+
+<div class="chart-grid">
+  <div class="chart-card"><h3>New Members per Month</h3><canvas id="cNew"></canvas></div>
+  <div class="chart-card"><h3>Memberships by Plan</h3><canvas id="cPlan"></canvas></div>
+  <div class="chart-card"><h3>Attendance per Month</h3><canvas id="cAtt"></canvas></div>
+  <div class="chart-card"><h3>Revenue per Month (₱)</h3><canvas id="cRev"></canvas></div>
+  <div class="chart-card"><h3>Expiring Memberships</h3><canvas id="cExp"></canvas></div>
+  <div class="chart-card"><h3>Payment Method Distribution</h3><canvas id="cPay"></canvas></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const C = {{ d.charts|tojson }};
+const colors = ['#2563eb', '#16a34a', '#f59e0b', '#dc2626', '#7c3aed', '#0891b2'];
+function make(id, type, labels, values, label) {
+  const circular = type === 'doughnut';
+  new Chart(document.getElementById(id), {
+    type: type,
+    data: { labels: labels, datasets: [{ label: label, data: values,
+            backgroundColor: circular ? colors : '#2563eb', borderColor: '#2563eb', tension: 0.3 }] },
+    options: { plugins: { legend: { display: circular } },
+               scales: circular ? {} : { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+  });
+}
+if (typeof Chart === 'undefined') {
+  document.querySelectorAll('.chart-card').forEach(function (el) {
+    el.insertAdjacentHTML('beforeend', '<p class="muted">Charts need an internet connection to load.</p>');
+  });
+} else {
+  make('cNew', 'bar', C.months, C.new_members, 'New members');
+  make('cPlan', 'doughnut', C.plans.labels, C.plans.values, 'Memberships');
+  make('cAtt', 'line', C.months, C.attendance, 'Visits');
+  make('cRev', 'bar', C.months, C.revenue, 'Revenue');
+  make('cExp', 'bar', C.expiring.labels, C.expiring.values, 'Expiring');
+  make('cPay', 'doughnut', C.methods.labels, C.methods.values, 'Payments');
+}
+</script>
 {% endblock %}

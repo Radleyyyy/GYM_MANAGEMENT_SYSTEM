@@ -130,3 +130,14 @@ textarea { padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-si
 .bar { background: #2563eb; height: 14px; border-radius: 3px; min-width: 4px; }
 .peak-row { background: #eff6ff; }
 .report-table td .bar { max-width: 160px; }
+
+
+/* ===== Lab 29: dashboard ===== */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.kpi { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 14px; text-decoration: none; color: inherit; }
+.kpi:hover { border-color: #2563eb; }
+.kpi-value { font-size: 26px; font-weight: bold; }
+.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+.chart-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 14px; }
+.chart-card h3 { margin: 0 0 8px; font-size: 1rem; }
+.chart-card canvas { max-height: 260px; }
