@@ -82,10 +82,12 @@ def unread_count():
 def mark_read(notification_id=None):
     """Mark one notification (or all when None) as read."""
     conn = get_db()
-    if notification_id is None:
-        conn.execute("UPDATE notifications SET is_read = 1")
-    else:
-        conn.execute("UPDATE notifications SET is_read = 1 WHERE notification_id = ?",
-                     (notification_id,))
-    conn.commit()
-    conn.close()
+    try:
+        if notification_id is None:
+            conn.execute("UPDATE notifications SET is_read = 1")
+        else:
+            conn.execute("UPDATE notifications SET is_read = 1 WHERE notification_id = ?",
+                         (notification_id,))
+        conn.commit()
+    finally:
+        conn.close()

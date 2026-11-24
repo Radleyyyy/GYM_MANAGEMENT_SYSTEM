@@ -6,17 +6,12 @@ Uses a temporary database, so your real gym.db is never touched.
 import os
 import re
 import sys
-import tempfile
 import unittest
 from datetime import date, timedelta
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-import config
-_tmp = tempfile.mkdtemp()
-config.DATABASE = os.path.join(_tmp, "test_gym.db")   # must be set before the app is imported
-
+import tests                              # noqa: F401  (switches the app to a temporary database)
 from app import app                      # noqa: E402
+tests.quiet(app)
 from database.db import get_db           # noqa: E402
 from models import expiration_model      # noqa: E402
 

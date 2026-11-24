@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ title }} - Gym System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="login-page">
+  <div class="login-card error-card">
+    <div class="error-code">{{ code }}</div>
+    <h2>{{ title }}</h2>
+    <p>{{ message }}</p>
+    <div class="actions">
+      <a href="javascript:history.back()" class="btn btn-light">Go Back</a>
+      <a href="{{ url_for('main.dashboard') }}" class="btn">Home</a>
+    </div>
+  </div>
+</body>
+</html>

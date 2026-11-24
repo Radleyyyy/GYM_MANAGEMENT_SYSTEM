@@ -97,12 +97,14 @@ def change_status(membership_id, new_status):
     if new_status == "active" and membership["end_date"] < date.today().isoformat():
         return False, "This membership already passed its end date."
     conn = get_db()
-    conn.execute(
-        "UPDATE memberships SET status = ? WHERE membership_id = ?",
-        (new_status, membership_id),
-    )
-    conn.commit()
-    conn.close()
+    try:
+        conn.execute(
+            "UPDATE memberships SET status = ? WHERE membership_id = ?",
+            (new_status, membership_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
     return True, f"Membership is now {new_status}."
 
 def list_memberships():

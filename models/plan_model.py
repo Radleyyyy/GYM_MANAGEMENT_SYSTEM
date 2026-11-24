@@ -99,9 +99,11 @@ def get_plan(plan_id):
 
 def set_status(plan_id, status):
     conn = get_db()
-    conn.execute("UPDATE membership_plans SET status = ? WHERE plan_id = ?", (status, plan_id))
-    conn.commit()
-    conn.close()
+    try:
+        conn.execute("UPDATE membership_plans SET status = ? WHERE plan_id = ?", (status, plan_id))
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def count_memberships(plan_id):

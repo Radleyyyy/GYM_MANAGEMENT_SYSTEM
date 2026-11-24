@@ -10,13 +10,15 @@ _failures = {}  # username -> {"count": int, "locked_until": datetime | None}
 def ensure_default_admin():
     # Safety net: make sure at least one account exists so login is possible
     conn = get_db()
-    if conn.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0:
-        conn.execute(
-            "INSERT INTO users (username, password_hash, full_name, role) VALUES (?,?,?,?)",
-            ("admin", generate_password_hash("admin123"), "System Administrator", "Administrator"),
-        )
-        conn.commit()
-    conn.close()
+    try:
+        if conn.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0:
+            conn.execute(
+                "INSERT INTO users (username, password_hash, full_name, role) VALUES (?,?,?,?)",
+                ("admin", generate_password_hash("admin123"), "System Administrator", "Administrator"),
+            )
+            conn.commit()
+    finally:
+        conn.close()
 
 
 DEMO_USERS = [
@@ -31,13 +33,15 @@ DEMO_USERS = [
 def ensure_demo_users():
     # Lab 31: one demo account per role (password: password123), added only if missing
     conn = get_db()
-    for username, full_name, role in DEMO_USERS:
-        conn.execute(
-            "INSERT OR IGNORE INTO users (username, password_hash, full_name, role) VALUES (?,?,?,?)",
-            (username, generate_password_hash("password123"), full_name, role),
-        )
-    conn.commit()
-    conn.close()
+    try:
+        for username, full_name, role in DEMO_USERS:
+            conn.execute(
+                "INSERT OR IGNORE INTO users (username, password_hash, full_name, role) VALUES (?,?,?,?)",
+                (username, generate_password_hash("password123"), full_name, role),
+            )
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def get_user(user_id):

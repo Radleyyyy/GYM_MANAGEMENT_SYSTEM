@@ -13,6 +13,7 @@ from controllers.expiration import expiration_bp
 from controllers.notifications import notifications_bp
 from controllers.reports import reports_bp
 from controllers.auth import auth_bp, load_user_and_protect, inject_permissions, forbidden
+from controllers.errors import register_error_handlers
 
 
 import os
@@ -32,6 +33,7 @@ user_model.ensure_demo_users()
 app.before_request(load_user_and_protect)
 app.context_processor(inject_permissions)
 app.register_error_handler(403, forbidden)
+register_error_handlers(app)
 
 _last_run = {"date": None}
 
@@ -42,9 +44,13 @@ def auto_update_expirations():
     from datetime import date
     from models import expiration_model, notification_model
     if _last_run["date"] != date.today():
-        expiration_model.update_statuses()
-        notification_model.generate_notifications()
-        _last_run["date"] = date.today()
+        try:
+            expiration_model.update_statuses()
+            notification_model.generate_notifications()
+            _last_run["date"] = date.today()
+        except Exception:
+            # The daily update must never block the page the user asked for; try again next request
+            app.logger.exception("Daily expiration update failed")
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(main_bp)

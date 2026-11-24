@@ -98,9 +98,11 @@ def update_member(member_id, f):
 
 def set_status(member_id, status):
     conn = get_db()
-    conn.execute("UPDATE members SET status = ? WHERE member_id = ?", (status, member_id))
-    conn.commit()
-    conn.close()
+    try:
+        conn.execute("UPDATE members SET status = ? WHERE member_id = ?", (status, member_id))
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def has_active_membership(member_id):
