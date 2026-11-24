@@ -69,15 +69,14 @@ def _next_payment_number(conn):
 def validate_payment(amount_due, amount_paid_text):
     """Amount validation, overpayment check, balance calculation and payment status.
     Returns (paid, balance, status). Raises ValueError with a message."""
-    text = (amount_paid_text or "").strip().replace(",", "")
+    text = billing_model.clean_money(amount_paid_text)
     if text == "":
         raise ValueError("Amount paid is required.")
-    try:
-        paid = Decimal(text)
-    except InvalidOperation:
+    if text.startswith("-") and billing_model.MONEY_RE.match(text[1:] or "x"):
+        raise ValueError("Amount paid must be greater than zero.")
+    if not billing_model.MONEY_RE.match(text):
         raise ValueError("Amount paid must be a number.")
-    if not paid.is_finite():
-        raise ValueError("Amount paid must be a number.")
+    paid = Decimal(text)
     if paid <= 0:
         raise ValueError("Amount paid must be greater than zero.")
     if paid > amount_due:

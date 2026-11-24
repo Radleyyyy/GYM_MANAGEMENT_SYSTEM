@@ -45,10 +45,13 @@ def validate(form):
         today = date.today()
         if start < today:
             errors.append("Start date cannot be in the past.")
+            start = None
         elif start > today + timedelta(days=MAX_ADVANCE_DAYS):
             errors.append("Start date cannot be more than 1 year from today.")
+            start = None
     except ValueError:
         errors.append("Start date is invalid.")
+        start = None
 
     # 4. Expiration date is always calculated by the system, then re-checked
     end = None

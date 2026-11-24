@@ -1,22 +1,32 @@
+import re
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from database.db import get_db
+
+MONEY_RE = re.compile(r"^(?:[0-9]+\.?[0-9]*|\.[0-9]+)$")   # digits with an optional decimal point
 
 MAX_AMOUNT = Decimal("1000000")
 CENT = Decimal("0.01")
 
 
+GROUPED_RE = re.compile(r"^-?[0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]*)?$")   # 1,000 or 12,345.50
+
+
+def clean_money(text):
+    """Trim the text and drop thousands commas. A comma anywhere else (like 1,5) is left in
+    so that the number check rejects it instead of silently reading it as 15."""
+    text = (text or "").strip()
+    return text.replace(",", "") if GROUPED_RE.match(text) else text
+
+
 def _to_decimal(text, label):
-    text = (text or "").strip().replace(",", "")
+    text = clean_money(text)
     if text == "":
         return Decimal("0")
-    try:
-        value = Decimal(text)
-    except InvalidOperation:
-        raise ValueError(f"{label} must be a number.")
-    if not value.is_finite():
-        raise ValueError(f"{label} must be a number.")
-    if value < 0:
+    if text.startswith("-") and MONEY_RE.match(text[1:] or "x"):
         raise ValueError(f"{label} cannot be negative.")
+    if not MONEY_RE.match(text):
+        raise ValueError(f"{label} must be a number.")
+    value = Decimal(text)
     if value > MAX_AMOUNT:
         raise ValueError(f"{label} is too large.")
     return value
