@@ -1,6 +1,6 @@
 # Gym Management System - Unit Testing Report
 
-- **Date:** November 27, 2026 10:37 AM
+- **Date:** November 27, 2026 10:39 AM
 - **Environment:** Python 3.13.18 on Linux, SQLite (temporary test database)
 - **Scope:** Each test checks one function on its own, using a temporary database.
 
@@ -8,7 +8,7 @@
 
 | Total tests | Passed | Failed | Errors | Pass rate | Time |
 |---|---|---|---|---|---|
-| 56 | 56 | 0 | 0 | 100% | 0.6 s |
+| 56 | 56 | 0 | 0 | 100% | 0.7 s |
 
 ## Results by area
 

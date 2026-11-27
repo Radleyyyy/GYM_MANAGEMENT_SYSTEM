@@ -112,7 +112,7 @@ class TestMemberToMembership(Base):
         """Expected: a registered member can subscribe, and the membership is linked to that member"""
         member_id = self.register_member()
         form = self.reception.get(f"/memberships/register?member_id={member_id}").data.decode()
-        self.assertIn(f'value="{member_id}"', form)
+        self.assertIn(f'<option value="{member_id}" >', form)
         _, ms_id = self.subscribe(member_id)
         self.assertEqual(one("SELECT member_id FROM memberships WHERE membership_id=?", ms_id)["member_id"], member_id)
 
@@ -136,7 +136,7 @@ class TestMemberToMembership(Base):
         r = self.reception.post("/memberships/register", data={"member_id": member_id, "plan_id": 1, "start_date": TODAY.isoformat()})
         self.assertEqual(r.status_code, 200)
         self.assertIn("already has", messages(r))
-        self.assertNotIn(f'value="{member_id}"', self.reception.get("/memberships/register").data.decode())
+        self.assertNotIn(f'<option value="{member_id}" >', self.reception.get("/memberships/register").data.decode())
 
     def test_inactive_member_cannot_subscribe(self):
         """Expected: an inactive member is refused"""
@@ -163,7 +163,7 @@ class TestPlanToMembership(Base):
         """Expected: the membership form carries each plan's duration and price for the live preview"""
         plan_id = self.create_plan(months=3, price="999")
         page = self.reception.get(f"/memberships/register?plan_id={plan_id}").data.decode()
-        self.assertIn(f'value="{plan_id}" data-months="3"', page)
+        self.assertIn(f'<option value="{plan_id}" data-months="3"', page)
         self.assertIn("999", page)
 
     def test_later_price_change_does_not_change_existing_membership(self):
@@ -180,7 +180,7 @@ class TestPlanToMembership(Base):
     def test_inactive_plan_is_not_offered(self):
         """Expected: an inactive plan cannot be used for a new membership"""
         plan_id = self.create_plan(status="inactive")
-        self.assertNotIn(f'value="{plan_id}"', self.reception.get("/memberships/register").data.decode())
+        self.assertNotIn(f'<option value="{plan_id}" data-months', self.reception.get("/memberships/register").data.decode())
         member_id = self.register_member()
         r = self.reception.post("/memberships/register", data={"member_id": member_id, "plan_id": plan_id, "start_date": TODAY.isoformat()})
         self.assertEqual(r.status_code, 200)
