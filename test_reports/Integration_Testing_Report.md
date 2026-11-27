@@ -1,6 +1,6 @@
 # Gym Management System - Integration Testing Report
 
-- **Date:** November 27, 2026 10:41 AM
+- **Date:** November 27, 2026 10:48 AM
 - **Environment:** Python 3.13.18 on Linux, SQLite (temporary test database)
 - **Scope:** Each test checks that two modules work correctly together.
 
@@ -8,7 +8,7 @@
 
 | Total tests | Passed | Failed | Errors | Pass rate | Time |
 |---|---|---|---|---|---|
-| 42 | 42 | 0 | 0 | 100% | 4.6 s |
+| 42 | 42 | 0 | 0 | 100% | 4.9 s |
 
 ## Results by area
 
