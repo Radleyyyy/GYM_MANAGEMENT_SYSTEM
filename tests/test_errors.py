@@ -166,9 +166,13 @@ class TestInvalidLogin(Base):
             run("UPDATE users SET status='active' WHERE username='trainer'")
 
     def test_lockout_message(self):
-        for _ in range(5):
-            self.attempt("reports", "bad")
-        self.assertIn("Too many failed attempts", messages(self.attempt("reports", "password123")))
+        from models import user_model
+        try:
+            for _ in range(5):
+                self.attempt("reports", "bad")
+            self.assertIn("Too many failed attempts", messages(self.attempt("reports", "password123")))
+        finally:
+            user_model._failures.clear()       # lockouts are kept in memory: do not affect other tests
 
     def test_session_of_removed_user_is_cleared(self):
         c = login("manager")
