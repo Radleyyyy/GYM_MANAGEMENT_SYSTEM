@@ -112,7 +112,7 @@ class TestMemberToMembership(Base):
         """Expected: a registered member can subscribe, and the membership is linked to that member"""
         member_id = self.register_member()
         form = self.reception.get(f"/memberships/register?member_id={member_id}").data.decode()
-        self.assertIn(f'<option value="{member_id}" >', form)
+        self.assertIn(f'<option value="{member_id}" selected', form)
         _, ms_id = self.subscribe(member_id)
         self.assertEqual(one("SELECT member_id FROM memberships WHERE membership_id=?", ms_id)["member_id"], member_id)
 

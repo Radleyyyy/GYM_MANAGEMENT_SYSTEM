@@ -1,6 +1,6 @@
 # Gym Management System - Integration Testing Report
 
-- **Date:** November 27, 2026 10:39 AM
+- **Date:** November 27, 2026 10:41 AM
 - **Environment:** Python 3.13.18 on Linux, SQLite (temporary test database)
 - **Scope:** Each test checks that two modules work correctly together.
 
@@ -8,13 +8,13 @@
 
 | Total tests | Passed | Failed | Errors | Pass rate | Time |
 |---|---|---|---|---|---|
-| 42 | 41 | 1 | 0 | 98% | 5.4 s |
+| 42 | 42 | 0 | 0 | 100% | 4.6 s |
 
 ## Results by area
 
 | Area | Tests | Passed | Result |
 |---|---|---|---|
-| Member → Membership | 5 | 4 | FAIL |
+| Member → Membership | 5 | 5 | PASS |
 | Plan → Membership | 5 | 5 | PASS |
 | Membership → Attendance | 5 | 5 | PASS |
 | Membership → Payment | 5 | 5 | PASS |
@@ -31,7 +31,7 @@
 | 2 | `test_member_cannot_subscribe_twice` | Expected: a member with an open membership is not offered another one | PASS |
 | 3 | `test_member_pages_lead_to_subscription` | Expected: the member's success page and profile both link to Register Membership | PASS |
 | 4 | `test_membership_shows_on_member_profile` | Expected: after subscribing, the profile shows the plan and period | PASS |
-| 5 | `test_new_member_can_subscribe` | Expected: a registered member can subscribe, and the membership is linked to that member | FAIL |
+| 5 | `test_new_member_can_subscribe` | Expected: a registered member can subscribe, and the membership is linked to that member | PASS |
 
 ## Plan → Membership
 
@@ -107,17 +107,8 @@
 
 ## Problems found
 
-### Member → Membership: `test_new_member_can_subscribe` (FAIL)
-
-```
-Traceback (most recent call last):
-  File "/home/claude/gym_management_system/tests/test_integration.py", line 115, in test_new_member_can_subscribe
-    self.assertIn(f'<option value="{member_id}" >', form)
-    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AssertionError: '<option value="13" >' not found in '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <title>Register Membership</title>\n  <link rel="stylesheet" href="/static/style.css">\n</head>\n<body>\n  <nav class="sidebar">\n    <h2>GymPro</h2>\n    \n    \n    <a href="/members/">Members</a>\n    \n    \n    <a href="/members/register">Register Member</a>\n    \n    \n    <a href="/plans/">Plans</a>\n    \n    \n    <a href="/courses/">Courses</a>\n    \n    \n    <a href="/memberships/">Memberships</a>\n    \n    \n    <a href="/renewals/">Renewals</a>\n    \n    \n    <a href="/attendance/">Attendance</a>\n    \n    \n    \n    \n    \n    \n    \n    <div class="userbox">\n      <strong>Front Desk Receptionist</strong><br>Receptionist\n      <form method="post" action="/logout">\n        <button class="btn btn-light btn-sm" type="submit">Log Out</button>\n      </form>\n    </div>\n    \n  </nav>\n  <main class="content">\n    \n    \n    \n    \n<h1>Register Membership</h1>\n\n\n<form method="post" class="form-card">\n  <div class="grid">\n    <label>Member *\n      <select name="member_id" required>\n        <option value="">-- Select member --</option>\n        \n        <option value="4" >\n          GYM-0004 - Ivy Integ1\n        </option>\n        \n        <option value="13" selected>\n          GYM-0013 - Ivy Integ10\n        </option>\n        \n        <option value="5" >\n          GYM-0005 - Ivy Integ2\n        </option>\n        \n        <option value="6" >\n          GYM-0006 - Ivy Integ3\n        </option>\n        \n        <option value="8" >\n          GYM-0008 - Ivy Integ5\n        </option>\n        \n        <option value="11" >\n          GYM-0011 - Ivy Integ8\n        </option>\n        \n        <option value="2" >\n          GYM-0002 - Maria Santos\n        </option>\n        \n      </select>\n    </label>\n    <label>Plan *\n      <select name="plan_id" id="plan" required>\n        <option value="">-- Select plan --</option>\n        \n        <option value="1" data-months="1" data-price="1000.0"\n                >\n          Monthly - 1 month(s) - ₱1,000.00\n        </option>\n        \n        <option value="2" data-months="3" data-price="2700.0"\n                >\n          Quarterly - 3 month(s) - ₱2,700.00\n        </option>\n        \n        <option value="3" data-months="6" data-price="5000.0"\n                >\n          Semi-Annual - 6 month(s) - ₱5,000.00\n        </option>\n        \n        <option value="4" data-months="12" data-price="9000.0"\n                >\n          Annual - 12 month(s) - ₱9,000.00\n        </option>\n        \n      </select>\n    </label>\n    <label>Start Date *\n      <input type="date" name="start_date" id="start" value="2026-11-27" min="2026-11-27" max="2027-11-27" required>\n    </label>\n    <label>Expiration Date\n      <input type="text" id="end" value="-" readonly>\n    </label>\n    <label>Membership Fee\n      <input type="text" id="fee" value="-" readonly>\n    </label>\n  </div>\n  <div class="actions">\n    <button type="submit" class="btn">Register Membership</button>\n    <a href="/members/" class="btn btn-light">Cancel</a>\n  </div>\n</form>\n\n<script>\n  const plan = document.getElementById("plan");\n  const start = document.getElementById("start");\n\n  function preview() {\n    const opt = plan.options[plan.selectedIndex];\n    const endBox = document.getElementById("end");\n    const feeBox = document.getElementById("fee");\n    if (!opt.dataset.months || !start.value) { endBox.value = "-"; feeBox.value = "-"; return; }\n    const [y, m, d] = start.value.split("-").map(Number);\n    const idx = m - 1 + Number(opt.dataset.months);\n    const ny = y + Math.floor(idx / 12), nm = idx % 12;\n    const last = new Date(ny, nm + 1, 0).getDate();\n    const end = new Date(ny, nm, Math.min(d, last));\n    endBox.value = end.getFullYear() + "-" + String(end.getMonth() + 1).padStart(2, "0")\n                 + "-" + String(end.getDate()).padStart(2, "0");\n    feeBox.value = "₱" + Number(opt.dataset.price).toLocaleString("en-PH", {minimumFractionDigits: 2});\n  }\n  plan.addEventListener("change", preview);\n  start.addEventListener("change", preview);\n  preview();\n</script>\n\n  </main>\n</body>\n</html>'
-```
-
+None. Every test passed.
 
 ## Conclusion
 
-1 test(s) need attention before this stage can be signed off.
+All tests passed. The tested functions behave as specified.
