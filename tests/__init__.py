@@ -18,3 +18,21 @@ def quiet(app):
     from logging.handlers import RotatingFileHandler
     app.logger.handlers = [h for h in app.logger.handlers if isinstance(h, RotatingFileHandler)]
     app.logger.propagate = False
+
+
+def snapshot():
+    """Copy the whole test database into memory (used by tests that change data for every member)."""
+    import sqlite3
+    memory = sqlite3.connect(":memory:")
+    source = sqlite3.connect(config.DATABASE)
+    source.backup(memory)
+    source.close()
+    return memory
+
+
+def restore(memory):
+    import sqlite3
+    target = sqlite3.connect(config.DATABASE)
+    memory.backup(target)
+    target.close()
+    memory.close()
